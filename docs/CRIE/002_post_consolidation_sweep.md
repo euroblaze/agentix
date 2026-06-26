@@ -82,6 +82,38 @@ gateway:
 - Gateway test-coverage expansion — held under the defer-tests-during-build-out rule.
 - webapps TypeScript adoption — design choice; only relevant once T1 lands.
 
+## Realized — Batch A (independent quick wins, merged 2026-06-26)
+
+Tracking fixes first: desktop #4 reopened (only item 1 shipped), #10 closed (T0 complete),
+flywheel#41 closed as dup of #101. Then 8 issues across 3 PRs:
+- ludo (agent) PR #520 — #516, #517, #518
+- ludo-gateway PR #32 — #27, #28, #31
+- ludo-webapps PR #104 — #102, #103
+
+**Honest code-savings accounting.** Batch A was mostly *correctness + docs*, not deletion.
+Genuine redundancy removed:
+
+| Item | Before | After | Code refs |
+|---|---|---|---|
+| `_chunk` (agent #517) | 6 identical copies (~12 lines) | 1 canonical `tools/_batch.chunk` | `src/ludo/tools/_batch.py`; was in load_attachments/rollback/sync_pinned_fields/invoke_workflow_action/extract_binary/restore_workflow_states |
+| `_deferred_fk_key` (agent #517) | 2 identical copies (~5 lines) | 1 canonical `tools/_keys.deferred_fk_key` | `src/ludo/tools/_keys.py`; was in load_to_odoo + relink_deferred |
+| `/system/status` (gateway #28) | registered twice | once (canonical) | `backend/app/routers/{health,system}.py` |
+| `"not found"` literals (gateway #28) | 4 inline copies | 1 `errors.NOT_FOUND` | `backend/app/errors.py` |
+
+**Duplication count: 9 redundant sites → 2 canonical helpers + 1 route + 1 const module.**
+**Net LOC ≈ flat** (agent commit was 46 ins / 48 del = −2): the removed duplicate logic (~17
+lines) is offset by the two small helper files' docstrings/headers + 8 one-line import aliases.
+The gateway commerce.py "+153" is almost entirely `ruff format` reflow of pre-existing dict
+literals — only 3 lines are real (401→403 + import); excluded from the count above.
+
+The value is the **maintenance win** (a chunking/key-format change now touches 1 file, not 6/2),
+not line reduction. The actual cross-language LOC savings land in **Batch B (#8 codegen)** — that
+deletes `migration_states.js` + the `MIGRATION_STATES` py↔js hand-sync and the desktop
+hand-maintained Swift enum/DTOs.
+
+Correctness/doc items (zero LOC savings): #516 README license, #518 UTC datetimes (4 sites),
+#31 401→403 semantics, #27/#102 locale anchoring to cluster.yaml, #103 contracts-source doc.
+
 ## Issue index (17 sub-issues under euroblaze/ludo-init#11)
 | # | Repo | Issue | Theme | Pri |
 |---|---|---|---|---|
