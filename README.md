@@ -1,9 +1,11 @@
-# ludo-init — LUDO cluster foundation
+# agentix — the Agentix kernel + LUDO cluster foundation
 
-The **bootstrap + foundation** repo for the LUDO product cluster (autonomous Odoo cross-version
-migration). It holds what's shared across all repos: the cross-repo hub, the unified product PRD,
-the canonical **contracts** (seams), shared **constants** + config **templates**, and cluster-level
-docs. Start here, then defer to each repo's own `CLAUDE.md`/README for specifics.
+**Agentix** is the reusable, app-agnostic **agent kernel** (`src/agentix/`) that the apps in the
+LUDO product cluster (autonomous Odoo cross-version migration) build on — LUDO = "Agentix + the
+Odoo app". This repo is the kernel's home and also carries the cluster **foundation**: the
+canonical **contracts** (seams), shared **constants** + config **templates**, the cross-repo hub,
+the unified product PRD, and cluster-level docs. Start here, then defer to each repo's own
+`CLAUDE.md`/README for specifics.
 
 ## What's here
 | Path | What |
@@ -32,16 +34,16 @@ one branded dependency is the vendored **wire-contract** package `ludo_shared`/`
 ## The cluster (repo map)
 | Dir | GitHub | Role |
 |---|---|---|
-| `ludo-agent` | euroblaze/ludo-agent | migration engine + worker (internal-only; the only agentic component) |
+| `agentix` | euroblaze/agentix | **this repo** — the Agentix kernel + cluster foundation (contracts/constants/hub) |
+| `ludo-agent` | euroblaze/ludo-agent | migration engine + worker — the Odoo app on Agentix (internal-only; the only agentic component) |
 | `ludo-gateway` | euroblaze/ludo-gateway | public control-plane edge (the single public door over the broker) |
 | `ludo-webapps` | euroblaze/ludo-webapps | product frontends (Vue 3 + Vite); backend retiring into the gateway |
 | `ludo-cli` | euroblaze/ludo-cli | transport-only CLI client |
 | `ludo-desktop` | euroblaze/ludo-desktop | native SwiftUI desktop client (macOS) |
-| `ludo-init` | euroblaze/ludo-init | **this repo** — cluster foundation |
 
 ## Workspace setup
-1. **Clone** all repos as siblings under one workspace dir (e.g. `~/s_/ludo/`); clone `ludo-init`
-   first (it carries the shared contracts/constants the others vendor).
+1. **Clone** all repos as siblings under one workspace dir (e.g. `~/s_/ludo/`); clone `agentix`
+   first (it carries the kernel + the shared contracts/constants the others depend on/vendor).
 2. **Prerequisites:** Python **3.12** + **uv**, Node.js (frontends), Docker (+ compose), NATS for the
    broker path. macOS client needs Xcode 15+.
 3. **Per-repo setup:** follow each repo's README (`uv sync` for Python services; `npm install` +
