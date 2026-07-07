@@ -5,8 +5,8 @@
 **Single source of truth for tooling in `docs/`.** Sections 1–7 document the landed
 kernel tool subsystem (code: `src/agentix/tools/`); sections 8–11 are **DIRECTION** —
 converged design, not the code today — consolidated from the retired proposals
-`tool-skill-calling.md` and `tools-skills-mcp.md` (their skills content moved to
-[`proposals/agent-skills-catalog.md`](proposals/agent-skills-catalog.md)). Tracking:
+`tool-skill-calling.md` and `tools-skills-mcp.md` (their skills content is now in
+[`skills.md`](skills.md)). Tracking:
 [euroblaze/ludo #503](https://github.com/euroblaze/ludo/issues/503), sub-issues
 #499–502. Not to be confused with dev tooling (ruff, uv, mypy) — that is
 [`dev-standards.md`](dev-standards.md), unrelated to agent tools.
@@ -141,7 +141,7 @@ Grounded in Anthropic's published guidance
 - **Skill** = a directory (`SKILL.md` + scripts/resources) packaging **procedural
   knowledge** — *when and how to compose tools toward a goal* — with progressive
   disclosure. *The carpentry know-how.* Canonical skills doc:
-  [`proposals/agent-skills-catalog.md`](proposals/agent-skills-catalog.md).
+  [`skills.md`](skills.md).
 - **MCP** = the **transport** that exposes tools (and skills) across process /
   component boundaries. *The shared toolbox other workshops can borrow from.* This
   is what "a Tools-catalog visible to all components" actually is (§11).

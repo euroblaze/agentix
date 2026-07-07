@@ -177,8 +177,7 @@ transport. The three concepts (Anthropic guidance:
 verified conclusions** (reactive cache + memory + control-plane episodic SoR). The old
 three-layer "Core + Skills + Memory" ladder (`findings→memory→skill→core`) is being
 retired; skills are **not** a graduation target but an open-standard packaging of
-know-how. Detail: `agentix/docs/tools.md` +
-`agentix/docs/proposals/agent-skills-catalog.md` +
+know-how. Detail: `agentix/docs/tools.md` + `agentix/docs/skills.md` +
 `ludo-agent/docs/proposals/harness-brain.md`.
 
 ## Where to look (defer to repo CLAUDE.md for specifics)

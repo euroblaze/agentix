@@ -43,6 +43,7 @@ Detail and worked examples: `docs/tools.md`.
 
 - The Agent Skills open standard, loaded by an agent-agnostic catalog.
 - Progressive disclosure — cheap name and description at session start, full body on demand — so the window stays lean.
+- Detail: `docs/skills.md` (bundle layout, catalog, consult_skill, loader).
 
 ### Working memory.
 

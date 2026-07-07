@@ -15,7 +15,7 @@ Three layers live here:
 * the **consult tool** (``consult_skill.py``) — reads a named skill's ``SKILL.md``
   body at runtime (``read_file`` is sandboxed and can't reach ``skills/``).
 
-Cluster design: ``docs/proposals/agent-skills-catalog.md``, ``docs/tools.md``.
+Canonical doc: ``docs/skills.md`` (tools + calling verbs: ``docs/tools.md``).
 """
 
 from __future__ import annotations
