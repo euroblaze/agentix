@@ -63,16 +63,43 @@ A structured tried / failed / learned log that survives context compression, aut
 - A budget caps how often the model is woken, never how hard it thinks in a turn. Ceilings are policy: set per account, or lifted entirely.
 - The model-window budget is a separate thing — see Context management above.
 
-**Storage.** An async SQLite store (WAL, busy-timeout, FTS5 search, schema-versioned migrations) for operational state, and an object store for checkpoints and bulk data — data and memory never cross.
+### Storage. 
+- An async SQLite store (WAL, busy-timeout, FTS5 search, schema-versioned migrations) for operational state, and 
+- an object store for checkpoints and bulk data
+- Data and memory never cross.
 
-**Isolation and concurrency.** One session = one context = one task-tree root; only distilled context crosses any boundary. Per-task cost and DB scoping, structured concurrency, a session lease with an orphan reaper, and trust-zone NATS accounts (edge / control / internal), deny-by-default.
+### Isolation and concurrency.
 
-**Safety and guardrails.** ActionGate on mutating tools — rate-limit, quiet-hours, idempotency, audit. Loop detection and recorded safety events.
+- One session = one context = one task-tree root;
+- Only distilled context crosses any boundary.
+- Per-task cost and DB scoping, structured concurrency, a session lease with an orphan reaper, and trust-zone NATS accounts (edge / control / internal), deny-by-default.
 
-**Memory tiers.** Three classifications — Transient (one run — the working-memory log above), Episodic (per-tenant and per-context), Learnings (general) — with verbs to reconcile a finding into a rule and promote it on cross-case evidence.
+### Safety and guardrails.
 
-**A2A over NATS.** Capability subjects as the registry, an agent card as the INFO reply, the *delegate* verb, and activatable key-gated agents with a deterministic fallback when no key is present.
+- ActionGate on mutating tools — rate-limit, quiet-hours, idempotency, audit.
+- Loop detection and recorded safety events.
 
-**Evaluation.** A Verdict spine grading both responses and outcomes, with an activatable LLM judge; honest outcome labels derived from verification rather than the agent's own claim.
+### Memory tiers.
 
-**Contracts and codegen.** Versioned wire contracts as the single source of truth, generating Python, TypeScript and Swift, with cross-repo drift guards so consumers never hand-maintain parallel copies.
+Three classifications 
+- Transient (one run — the working-memory log above), 
+- Episodic (per-tenant and per-context),
+- Learnings (general)
+
+.. with verbs to reconcile a finding into a rule and promote it on cross-case evidence.
+
+### A2A over NATS.
+
+- Capability subjects as the registry,
+- an agent card as the INFO reply,
+- the *delegate* verb, and
+- activatable key-gated agents with a deterministic fallback when no key is present.
+
+### Evaluation.
+
+- A Verdict spine grading both responses and outcomes, with an activatable LLM judge;
+- honest outcome labels derived from verification rather than the agent's (or the Cortex/LLM's) own claim.
+
+**Contracts and codegen.** 
+
+- Versioned wire contracts as the single source of truth, generating Python, TypeScript and Swift, with cross-repo drift guards so consumers never hand-maintain parallel copies.
