@@ -45,7 +45,7 @@ one branded dependency is the vendored **wire-contract** package `ludo_shared`/`
 2. **Prerequisites:** Python **3.12** + **uv**, Node.js (frontends), Docker (+ compose), NATS for the
    broker path. macOS client needs Xcode 15+.
 3. **Per-repo setup:** follow each repo's README (`uv sync` for Python services; `npm install` +
-   `npm run dev` for `ludo-webapps`). Conventions: [`docs/tooling-standards.md`](docs/tooling-standards.md),
+   `npm run dev` for `ludo-webapps`). Conventions: [`docs/dev-standards.md`](docs/dev-standards.md),
    [`docs/network-and-ports.md`](docs/network-and-ports.md), [`docs/env-and-secrets.md`](docs/env-and-secrets.md).
 4. **Vendored config:** repos copy `constants/cluster.yaml` (+ align `ruff`/`.gitignore` to
    `templates/`); `scripts/check_config_drift.py` and `check_contract_drift.py` keep copies honest.

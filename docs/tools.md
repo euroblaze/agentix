@@ -8,8 +8,8 @@ converged design, not the code today — consolidated from the retired proposals
 `tool-skill-calling.md` and `tools-skills-mcp.md` (their skills content moved to
 [`proposals/agent-skills-catalog.md`](proposals/agent-skills-catalog.md)). Tracking:
 [euroblaze/ludo #503](https://github.com/euroblaze/ludo/issues/503), sub-issues
-#499–502. Not to be confused with `tooling-standards.md` — that is dev tooling
-(ruff, uv, mypy), unrelated to agent tools.
+#499–502. Not to be confused with dev tooling (ruff, uv, mypy) — that is
+[`dev-standards.md`](dev-standards.md), unrelated to agent tools.
 
 ---
 

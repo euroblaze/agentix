@@ -1,6 +1,6 @@
 # LUDO canonical ruff config — vendored from agentix/templates/ruff.toml into each
 # Python repo's pyproject.toml [tool.ruff]. line-length 120 is the cluster standard
-# (gateway moved 110 -> 120; widening adds no E501s). See docs/tooling-standards.md.
+# (gateway moved 110 -> 120; widening adds no E501s). See docs/dev-standards.md.
 #
 # Two tiers:
 #   core    (clients: gateway, cli)  -> select = ["E","F","I","UP","B"]
