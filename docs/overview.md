@@ -41,7 +41,14 @@
 
 **Context management.** One owner of the model window — assemble, budget, compress, evict by priority tier (guardrails > goal > working set > retrieved memory > history), with a per-turn X-ray of what entered and why.
 
-**Token economics.** Per-session and per-account budget ceilings; cost recorded at each LLM call, not after the fact. Pluggable compression collapses old tool results before the budget is breached.
+**Budgets (token economics).**
+
+- Per-session and per-account spending ceilings, in money; cost is recorded at each LLM call, not after the fact.
+- *Safety*: no human approves anything mid-run, so the budget is what ends a hopeless retry loop — when it runs out, the agent stops and hands off honestly instead of trying forever.
+- *Economics*: tokens cost money. The account ceiling stops one expensive customer from eating the margin of the others; the control plane enforces it and gives each job the remaining headroom.
+- *Design pressure*: every escalation has a price, so the system is pushed to solve problems the cheap way and to learn — it gets smarter by learning, not by spending more.
+- A budget caps how often the model is woken, never how hard it thinks in a turn. Ceilings are policy: set per account, or lifted entirely.
+- The model-window budget is a separate thing — see Context management above.
 
 **Storage.** An async SQLite store (WAL, busy-timeout, FTS5 search, schema-versioned migrations) for operational state, and an object store for checkpoints and bulk data — data and memory never cross.
 
