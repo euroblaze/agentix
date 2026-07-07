@@ -26,7 +26,7 @@ delegate/A2A [#502]. This doc develops **consult↔compile** [#499].
 ## 2. The Consult↔Compile lifecycle (the spine)
 
 **The decisive finding: LUDO already has the two end-tiers** — they were just never named
-as one lifecycle. A surprise during a drain falls through a **cost-ordered cascade**:
+as one lifecycle. An escalation during a drain falls through a **cost-ordered cascade**:
 
 | Tier | Mechanism (today) | LLM? |
 |---|---|---|
@@ -35,19 +35,19 @@ as one lifecycle. A surprise during a drain falls through a **cost-ordered casca
 | **S0 Novel** | no recipe, no skill → reason from scratch + `record_finding` | full reasoning |
 
 `build_remediation_router` declines to the agent **only when the recipe needs judgment**
-— it exists precisely "so the LLM brain stays asleep for surprises that aren't surprises."
+— it exists precisely "so the LLM brain stays asleep for escalations the deterministic body can absorb."
 That is the compiled tier, already load-bearing.
 
 **The lifecycle = a managed descent S0 → S1 → S3:**
 
-- A novel surprise (S0) → finding → reconciled into the wiki → authored as a **skill** (now
+- A novel escalation (S0) → finding → reconciled into the wiki → authored as a **skill** (now
   S1, consultable). *(This arrow exists: the maturation pipeline.)*
 - A skill whose runtime application is **provably invariant** across N customers/pairs →
   **compiled** into an `error_catalogue.yaml` recipe (+ rename-map rule) → thereafter
   handled at **S3** deterministically. *(This is the missing arrow.)*
 
 The system's intelligence is the share of traffic the **S3** tier absorbs. Trending it up
-is a measurable form of the autonomy bar's *"surprises per customer → 0"* — a concrete
+is a measurable form of the autonomy bar's *"escalations per customer → 0"* — a concrete
 read on "the army gets better between campaigns."
 
 ## 3. The gap to close
@@ -121,6 +121,6 @@ executed recipe — is *simultaneously* what rides the NATS rails (idempotent, q
 1. **Consult tier wiring** — surface `SkillCatalog.describe()` into the agent's context at
    session start + add an always-on `consult_skill(name)` builtin (reads the body from the
    real skills root; `read_file` is sandboxed and can't). Covers both the standalone agent
-   path and compose-on-surprise (which delegates to `run_agent_migration`).
+   path and compose-on-escalation (which delegates to `run_agent_migration`).
 2. **The compiler link** — declarative remediation block on skills → router recipe; trace
    invariance scoring → compile-candidate flag at session close.

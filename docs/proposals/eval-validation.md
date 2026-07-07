@@ -27,7 +27,7 @@ concierge / ops) gets the same validation spine.
         ├ SchemaCheck      (reuse)              ├ OutcomeContract (generalise verify_migration)
         ├ GroundednessCheck(reuse)              ├ honest outcome  (reuse compute_outcome)
         ├ AdversarialCheck (reuse)              ├ claim_mismatch  (reuse — no lying)
-        └ JudgeCheck(rubric) ← NEW, activatable └ → intervention_type / surprises (reuse)
+        └ JudgeCheck(rubric) ← NEW, activatable └ → intervention_type / escalations (reuse)
 ```
 
 ### Spine — `Verdict`
@@ -62,7 +62,7 @@ and verify both adopt it (code shrinks).
   prose) + `claim_mismatch` (catch the agent claiming success when the contract disagrees).
   Generalise `{aborted, incomplete, migrated}` → `{aborted, incomplete, accomplished}`.
 - **Metric** — feed the existing `intervention_type` + `intervention_summary` + `omg
-  surprises` rollup (generalised beyond migration).
+  escalations` rollup (generalised beyond migration).
 
 ## Runtime integration seams (no offline harness this round)
 
@@ -72,7 +72,7 @@ and verify both adopt it (code shrinks).
   (e.g. a drafted customer email clears groundedness + the judge rubric) — a guardrail.
 - **SafetyGate** (existing): its verify-then-rollback *is* Grader B for the migration agent
   (`verify_migration` adopts the spine).
-- **Surprises**: every outcome Verdict → `intervention_type` → `omg surprises`.
+- **Escalations**: every outcome Verdict → `intervention_type` → `omg escalations`.
 
 ## Principles (lean / reuse / honest)
 
@@ -94,5 +94,5 @@ validation substrate they will consume.
 - **E1** — the `Verdict` spine (consolidate Finding/Confidence/Evidence/Provenance + hard/advisory).
 - **E2** — Grader A response validators (schema + groundedness + adversarial, composed).
 - **E3** — the activatable **JudgeCheck(rubric)** primitive (the one new piece).
-- **E4** — Grader B agent-agnostic **OutcomeContract** + honest outcome + surprises.
+- **E4** — Grader B agent-agnostic **OutcomeContract** + honest outcome + escalations.
 - **E5** — runtime seams: wire into Cortex verify (#471), ActionGate (#495), SafetyGate.

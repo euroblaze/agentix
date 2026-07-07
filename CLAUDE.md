@@ -9,7 +9,7 @@ authoritative for that repo**; this file points to them. Read this first to know
 ## Agentix — the agentic kernel
 
 **Agentix** is the reusable, app-agnostic **agentic-app kernel** distilled from this cluster:
-the frozen API + principles for building agent apps — the deterministic body + **Cortex-on-surprise**,
+the frozen API + principles for building agent apps — the deterministic body + **cognitive escalation**,
 the four calling verbs (`call`/`consult`/`compile`/`delegate`), **activatable** (key-gated) agents
 with a deterministic fallback, trust-zone NATS isolation, **ActionGate** guardrails, the eval
 **Verdict** spine, A2A-over-NATS, the three memory tiers, and the versioned contracts.
@@ -117,7 +117,12 @@ two public client repos (`ludo-cli`, `ludo-desktop`) are source-available.
   operator review/decision milestone (the former "gate"); the resumable session-state
   snapshot is a different thing — call it a **state checkpoint** if both appear.
 - **Cortex** = the LLM (`ludo-agent/src/ludo/llm/` — router + anthropic/openai/groq).
-  Woken **only on surprise**; the deterministic body does the rest.
+  Woken **only on escalation**; the deterministic body does the rest.
+- **Escalation vs handoff** (locked vocabulary): an *escalation* (cognitive) is a
+  deterministic step whose outcome is not provably what was expected — the body wakes
+  the Cortex (formerly "surprise"). An *operator handoff* is the agent giving up to a
+  human after the compose budget is spent (formerly "escalate to the operator"). Never
+  use bare "escalation" for the human case.
 - **Data vs Memory — never cross.** *Data* = records being migrated + bulk
   artifacts → MinIO + the target Odoo. *Memory* = what the system learnt →
   git-backed `memory/` store + the core prompt (+ Agent Skills where warranted).
@@ -163,9 +168,9 @@ transport. The three concepts (Anthropic guidance:
 - **Calling — the four verbs** (implemented; `agentix/docs/proposals/tool-skill-calling.md`,
   #503): `call` a tool (in-process) · `consult` a skill (`consult_skill` pulls the
   `SKILL.md` body on demand) · `compile` a skill (lift its strategy into a deterministic
-  recipe — no LLM at runtime) · `delegate` (hand work to another agent over A2A). Surprises
+  recipe — no LLM at runtime) · `delegate` (hand work to another agent over A2A). Escalations
   descend a cost-ordered cascade **S3 compiled → S1 consult → S0 novel**; the share absorbed
-  by S3 is the system's intelligence (a concrete read on *surprises/customer → 0*).
+  by S3 is the system's intelligence (a concrete read on *escalations/customer → 0*).
 
 **Competence model** (the agent, redesign `euroblaze/ludo` #468): two layers —
 **Core** (deterministic body + the Cortex loop) over a **memory substrate of

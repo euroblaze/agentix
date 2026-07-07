@@ -18,7 +18,7 @@ admins, **while the codebase shrinks, not grows.**
 ### 1. Agents are an *activatable layer* (key-gated)
 A component's agent-nature lights up when a valid LLM key is present; with no key it
 runs as **deterministic software**. This generalises "deterministic body, Cortex on
-surprise" to the whole cluster. Multiple agents per repo, evolving in functionality,
+escalation" to the whole cluster. Multiple agents per repo, evolving in functionality,
 type and cardinality. **Activation = subscription presence** (see §3).
 
 ### 2. Whoever holds the key owns the guardrails

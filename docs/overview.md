@@ -3,7 +3,7 @@
 **What it is.** 
 
 - The frozen, app-agnostic API and principles for building agentic applications.
-- A deterministic body that wakes an LLM only on surprise.
+- A deterministic body that wakes an LLM only on escalation.
 - Apps supply domain tools, prompts and memory sources; the kernel supplies everything else.
 - A strict `[K]` kernel / `[A]` app split keeps domain terms out of the core, enforced by a purity gate.
 
@@ -13,10 +13,14 @@
 - the agent dispatcher owns the LLM loop — build request, call, dispatch tool calls, append results.
 - Messages are an opaque list the engine snapshots per turn.
 
-**Cortex-on-surprise.** 
+**Cognitive escalation.** 
 
-- The deterministic path handles the routine; the model is invoked only when something is unexpected.
-- Surprises descend a cost-ordered cascade — compiled recipe → consult skill → novel reasoning — so the cheapest competent path wins.
+- An *escalation* is a deterministic step whose outcome is not provably what was expected (in the reference app: a data drain with quarantined rows, a failed verify, or value drift).
+- The deterministic body handles the routine; an escalation is the only event that wakes the model (the *Cortex*).
+- Escalations descend the escalation ladder — compiled recipe (model stays asleep) → consult skill → novel reasoning — so the cheapest competent path wins; the loop then re-runs the step to re-prove it.
+- If the budget is spent before the step proves clean, the agent performs an *operator handoff* (distinct term: escalation = body wakes the model; handoff = agent gives up to a human).
+- The share of escalations absorbed at the compiled tier is the system's intelligence; the product metric is *escalations/customer → 0*.
+- Detail: `proposals/tool-skill-calling.md` (the ladder), `proposals/eval-validation.md` (the metric rollup); reference implementation `ludo-agent/src/ludo/core/compose_loop.py`.
 
 **Four calling verbs.** 
 
