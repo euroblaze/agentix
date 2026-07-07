@@ -34,4 +34,5 @@ than under-counts). Date-stamped model ids are prefix-matched. See the field
 docstring in `config.py` and `core/middleware/cost_tracking.py`.
 
 Cluster-wide secret policy (fail-fast in stag/prod, secret vs publishable) lives in
-[`env-and-secrets.md`](env-and-secrets.md); this page is the kernel-specific list.
+[`ludo-agent/docs/cluster/env-and-secrets.md`](https://github.com/euroblaze/ludo-agent/blob/main/docs/cluster/env-and-secrets.md);
+this page is the kernel-specific list.

@@ -24,7 +24,7 @@ schemas each assemble themselves). Consolidating it into one owner is the CRIE w
   memory, knowledge. (see `docs/tools.md`, `docs/skills.md`)
 - **Checkpoints** — `core/checkpoints.py`; context reconstruction on resume rides this spine.
 - **Eval** — Verdict + Grader A (responses) / B (outcomes). Every context policy must be
-  measurable here. (see `docs/proposals/eval-validation.md`)
+  measurable here. (see `ludo-agent/docs/proposals/eval-validation.md`)
 - **Memory tiers** — `consult_memory`, applied_memory_rules (retrieval source, not the policy).
 - **Window reports / metrics** — introspection surface for "what was in-window and why".
 

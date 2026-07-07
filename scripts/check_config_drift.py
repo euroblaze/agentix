@@ -8,7 +8,7 @@ baseline). Each Python repo vendors a byte-identical copy under `<repo>/constant
 Run from `agentix/`. Sibling-style guard, mirroring check_contract_drift.py.
 
 (ruff config + .gitignore base are aligned in-place per repo — their tiers differ —
-so they're not byte-vendored here; dev-standards.md is their canonical reference.)
+so they're not byte-vendored here; ludo-agent/docs/cluster/dev-standards.md is their canonical reference.)
 """
 from __future__ import annotations
 
