@@ -15,7 +15,7 @@
 
 **Cognitive escalation.** 
 
-- An *escalation* is a deterministic step whose outcome is not provably what was expected (in the reference app: a data drain with quarantined rows, a failed verify, or value drift).
+- An *escalation* happens when an automated step cannot prove its result is correct (in the reference app: rows failed to load, a verification failed, or values changed during transfer).
 - The deterministic body handles the routine; an escalation is the only event that wakes the model (the *Cortex*).
 - Escalations descend the escalation ladder — compiled recipe (model stays asleep) → consult skill → novel reasoning — so the cheapest competent path wins; the loop then re-runs the step to re-prove it.
 - If the budget is spent before the step proves clean, the agent performs an *operator handoff* (distinct term: escalation = body wakes the model; handoff = agent gives up to a human).
