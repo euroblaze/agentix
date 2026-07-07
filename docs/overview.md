@@ -1,18 +1,33 @@
 # Agentix — the reusable kernel for building AI agents
 
-A one-page tour of the kernel's surface. Each line is deliberately terse; see the
-per-topic docs (`session.md`, `context.md`, `isolation.md`, the contracts, and the
-component inventory in agentix#1) for detail.
+**What it is.** 
 
-**What it is.** The frozen, app-agnostic API and principles for building agent apps, distilled from a production system. A deterministic body that wakes an LLM only on surprise. Apps supply domain tools, prompts and memory sources; the kernel supplies everything else. A strict `[K]` kernel / `[A]` app split keeps domain terms out of the core, enforced by a purity gate.
+- The frozen, app-agnostic API and principles for building agentic applications.
+- A deterministic body that wakes an LLM only on surprise.
+- Apps supply domain tools, prompts and memory sources; the kernel supplies everything else.
+- A strict `[K]` kernel / `[A]` app split keeps domain terms out of the core, enforced by a purity gate.
 
-**Engine and dispatch.** A turn engine runs an ordered middleware chain around each step; the agent dispatcher owns the LLM loop — build request, call, dispatch tool calls, append results. Messages are an opaque list the engine snapshots per turn.
+**Engine and dispatch.** 
 
-**Cortex-on-surprise.** The deterministic path handles the routine; the model is invoked only when something is unexpected. Surprises descend a cost-ordered cascade — compiled recipe → consult skill → novel reasoning — so the cheapest competent path wins.
+- A turn engine runs an ordered middleware chain around each step;
+- the agent dispatcher owns the LLM loop — build request, call, dispatch tool calls, append results.
+- Messages are an opaque list the engine snapshots per turn.
 
-**Four calling verbs.** *call* a tool (in-process), *consult* a skill (pull its body on demand), *compile* a skill into a deterministic recipe (no LLM at runtime), *delegate* to another agent over A2A.
+**Cortex-on-surprise.** 
 
-**Tools.** A registry with provider-neutral spec conversion. Always-on read-only primitives (read, glob, grep, fetch) plus opt-in mutating primitives (write, patch, shell, git). Consolidate, namespace, token-efficient returns, actionable errors.
+- The deterministic path handles the routine; the model is invoked only when something is unexpected.
+- Surprises descend a cost-ordered cascade — compiled recipe → consult skill → novel reasoning — so the cheapest competent path wins.
+
+**Four calling verbs.** 
+
+- *call* a tool (in-process),
+- *consult* a skill (pull its body on demand),
+- *compile* a skill into a deterministic recipe (no LLM at runtime),
+- *delegate* to another agent over A2A.
+
+**Tools.** 
+
+- A registry with provider-neutral spec conversion. Always-on read-only primitives (read, glob, grep, fetch) plus opt-in mutating primitives (write, patch, shell, git). Consolidate, namespace, token-efficient returns, actionable errors.
 
 **Skills.** The Agent Skills open standard, loaded by an agent-agnostic catalog. Progressive disclosure — cheap name and description at session start, full body on demand — so the window stays lean.
 
