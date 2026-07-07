@@ -14,7 +14,7 @@ Change License:       Apache License, Version 2.0
 For information about alternative licensing arrangements for the Licensed Work,
 contact Ashant Chalasani <ach@runludo.com>.
 
-NOTE: Licensing across the LUDO cluster has two tiers — see docs/licensing-policy.md.
+NOTE: Licensing across the LUDO cluster has two tiers — see ludo-agent/docs/cluster/licensing-policy.md.
 ludo-webapps is proprietary (all rights reserved); ludo-agent, ludo-gateway, ludo-cli,
 and ludo-desktop are BSL 1.1 -> Apache-2.0 like this repo.
 

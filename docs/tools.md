@@ -9,7 +9,7 @@ converged design, not the code today — consolidated from the retired proposals
 [`skills.md`](skills.md)). Tracking:
 [euroblaze/ludo #503](https://github.com/euroblaze/ludo/issues/503), sub-issues
 #499–502. Not to be confused with dev tooling (ruff, uv, mypy) — that is
-[`dev-standards.md`](dev-standards.md), unrelated to agent tools.
+[`ludo-agent/docs/cluster/dev-standards.md`](https://github.com/euroblaze/ludo-agent/blob/main/docs/cluster/dev-standards.md), unrelated to agent tools.
 
 ---
 

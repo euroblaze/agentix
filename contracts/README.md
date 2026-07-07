@@ -5,7 +5,7 @@ Every consumer repo **vendors** (keeps a byte-identical copy) from here; none ed
 own copy. Drift is guarded by [`../scripts/check_contract_drift.py`](../scripts/check_contract_drift.py).
 Consumers span **private/proprietary** repos (`ludo-gateway`, `ludo-webapps`) and **public/BSL**
 repos (`ludo-cli`, `ludo-desktop`) — so every vendored contract artifact must stay publishable
-(no secrets, no engine internals). See [`../docs/licensing-policy.md`](../docs/licensing-policy.md).
+(no secrets, no engine internals). See [`ludo-agent/docs/cluster/licensing-policy.md`](https://github.com/euroblaze/ludo-agent/blob/main/docs/cluster/licensing-policy.md).
 
 | Contract | File | Between | Notes |
 |---|---|---|---|
