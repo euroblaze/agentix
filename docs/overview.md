@@ -37,6 +37,7 @@ Detail and worked examples: `proposals/tool-skill-calling.md`.
 
 - A registry with provider-neutral spec conversion.
 - Always-on read-only primitives (read, glob, grep, fetch) plus opt-in mutating primitives (write, patch, shell, git). Consolidate, namespace, token-efficient returns, actionable errors.
+- Detail: `docs/tools.md` (contract, registry, sandbox, safety gate, dispatch flow).
 
 ### Skills.
 
