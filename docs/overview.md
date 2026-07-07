@@ -50,11 +50,11 @@ A structured tried / failed / learned log that survives context compression, aut
 - App scope is opaque `app_meta`.
 - Sessions carry a control-plane binding and a parent link for streaming and delegation hierarchy.
 
-**Context management.** 
+### Context management.
 
 - One owner of the model window — assemble, budget, compress, evict by priority tier (guardrails > goal > working set > retrieved memory > history), with a per-turn X-ray of what entered and why.
 
-**Budgets (token economics).**
+### Budgets (token economics).
 
 - Per-session and per-account spending ceilings, in money; cost is recorded at each LLM call, not after the fact.
 - **Safety**: no human approves anything mid-run, so the budget is what ends a hopeless retry loop — when it runs out, the agent stops and hands off honestly instead of trying forever.
