@@ -22,6 +22,15 @@ from agentix.drivers.chat import (
     tool_to_spec,
 )
 from agentix.drivers.cost import CostRecordingChatDriver
+from agentix.drivers.embedding import (
+    CachedEmbeddingDriver,
+    EmbeddingCache,
+    EmbeddingDriver,
+    EmbeddingError,
+    EmbeddingResult,
+    HubleEmbeddingDriver,
+    OpenAIEmbeddingDriver,
+)
 from agentix.drivers.limiter import (
     configure_driver_capacity,
     current_limit,
@@ -42,6 +51,7 @@ from agentix.drivers.session import (
 __all__ = [
     "KNOWN_MODALITIES",
     "KNOWN_SOURCES",
+    "CachedEmbeddingDriver",
     "ChatDriver",
     "ChatFailoverChain",
     "ChatRequest",
@@ -53,8 +63,14 @@ __all__ = [
     "DriverInvalidRequest",
     "DriverRateLimited",
     "DriverUnavailable",
+    "EmbeddingCache",
+    "EmbeddingDriver",
+    "EmbeddingError",
+    "EmbeddingResult",
     "FailoverCallback",
+    "HubleEmbeddingDriver",
     "NoDriversAvailable",
+    "OpenAIEmbeddingDriver",
     "ToolSpec",
     "bind_session",
     "configure_driver_capacity",
