@@ -196,9 +196,7 @@ async def resume_or_create(
     row = await sqlite.get_session_by_control_plane_id(control_plane_id)
     if row is not None and str(row["status"]) in _RESUMABLE_STATUSES and row["checkpoint"] is not None:
         try:
-            session = await resume_from(
-                str(row["id"]), sqlite=sqlite, minio=minio, checkpoint=str(row["checkpoint"])
-            )
+            session = await resume_from(str(row["id"]), sqlite=sqlite, minio=minio, checkpoint=str(row["checkpoint"]))
             return session, True
         except (LookupError, KeyError):
             # Row says resumable but the blob is gone (GC'd, partial write) —

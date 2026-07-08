@@ -1,66 +1,12 @@
-"""Global LLM capacity limiter (isolation.md I5).
+"""MIGRATION SHIM — removed in 0.5.0 final; import from agentix.drivers.limiter."""
 
-Session-owned state is per-task, but *shared external capacity* — the concurrent
-LLM calls the whole process may have in flight — is intentionally governed by one
-process-global limiter, not per-session. Without it, ``gather``-over-Sessions (or
-multi-agent fan-out) would multiply concurrent provider calls by the number of
-live sessions and trip provider rate limits / exhaust sockets.
+from agentix.drivers.limiter import (
+    configure_driver_capacity,
+    current_limit,
+    driver_capacity,
+)
 
-The limiter is a single semaphore acquired around every ``provider.complete``.
-It is keyed by running event loop so it is safe to reuse across test loops (each
-loop gets its own instance) while remaining a single shared gate within the one
-loop a production worker runs — the "global" scope that matters. Closes
-agentix#40.
-"""
+llm_capacity = driver_capacity
+configure_llm_capacity = configure_driver_capacity
 
-from __future__ import annotations
-
-import asyncio
-import contextlib
-from collections.abc import AsyncIterator
-
-# Default max concurrent external LLM calls per process. Conservative — one
-# single-tenant worker rarely needs more, and it caps fan-out storms. Override
-# with ``configure_llm_capacity`` at startup (e.g. from config/env).
-_DEFAULT_LIMIT = 8
-
-_limit = _DEFAULT_LIMIT
-# One semaphore per event loop (id(loop) -> semaphore). Keying by loop avoids
-# reusing a semaphore bound to a finished loop across asyncio.run() boundaries.
-_semaphores: dict[int, asyncio.Semaphore] = {}
-
-
-def configure_llm_capacity(limit: int) -> None:
-    """Set the process-global concurrent-LLM-call ceiling. Call once at startup,
-    before the loop does real work. Rebuilds existing per-loop semaphores lazily."""
-    global _limit
-    if limit < 1:
-        raise ValueError("llm capacity limit must be >= 1")
-    _limit = limit
-    _semaphores.clear()
-
-
-def current_limit() -> int:
-    """The configured ceiling (for introspection / tests)."""
-    return _limit
-
-
-def _semaphore() -> asyncio.Semaphore:
-    loop = asyncio.get_running_loop()
-    key = id(loop)
-    sem = _semaphores.get(key)
-    if sem is None:
-        sem = asyncio.Semaphore(_limit)
-        _semaphores[key] = sem
-    return sem
-
-
-@contextlib.asynccontextmanager
-async def llm_capacity() -> AsyncIterator[None]:
-    """Acquire one slot of global LLM capacity for the duration of the block.
-
-    Wrap every external LLM call in this. When all slots are taken, additional
-    callers await here rather than piling concurrent requests onto the provider.
-    """
-    async with _semaphore():
-        yield
+__all__ = ["configure_llm_capacity", "current_limit", "llm_capacity"]

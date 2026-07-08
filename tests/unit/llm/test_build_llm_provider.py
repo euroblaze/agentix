@@ -14,7 +14,11 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from agentix.drivers.base import DriverDescriptor
 from agentix.runtime import build_llm_provider
+
+_HUBLE_DESC = DriverDescriptor(name="huble", kind="model", modality="chat", default_model="glm-4.7")
+_ANTHRO_DESC = DriverDescriptor(name="anthropic", kind="model", modality="chat", default_model="claude-haiku-4-5")
 
 
 def _fake_huble_cfg() -> Any:
@@ -38,10 +42,20 @@ def test_build_llm_provider_uses_config_model_when_no_override() -> None:
     captured: dict[str, Any] = {}
 
     class _FakeHuble:
+        name = "huble"
+        default_model = "glm-4.7"
+        descriptor = _HUBLE_DESC
+
         def __init__(self, **kwargs: Any) -> None:
             captured.update(kwargs)
 
-    with patch("agentix.llm.huble.HubleProvider", _FakeHuble):
+        async def complete(self, request: Any) -> Any:  # pragma: no cover
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            pass
+
+    with patch("agentix.drivers.adapters.huble.HubleChatDriver", _FakeHuble):
         build_llm_provider(cfg)
 
     assert captured.get("model") == "glm-4.7"
@@ -56,10 +70,20 @@ def test_build_llm_provider_applies_model_override_to_huble() -> None:
     captured: dict[str, Any] = {}
 
     class _FakeHuble:
+        name = "huble"
+        default_model = "glm-4.7"
+        descriptor = _HUBLE_DESC
+
         def __init__(self, **kwargs: Any) -> None:
             captured.update(kwargs)
 
-    with patch("agentix.llm.huble.HubleProvider", _FakeHuble):
+        async def complete(self, request: Any) -> Any:  # pragma: no cover
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            pass
+
+    with patch("agentix.drivers.adapters.huble.HubleChatDriver", _FakeHuble):
         build_llm_provider(cfg, model_override="qwen3-next-80b-a3b-thinking")
 
     assert captured.get("model") == "qwen3-next-80b-a3b-thinking"
@@ -74,10 +98,20 @@ def test_build_llm_provider_none_override_falls_through_to_config() -> None:
     captured: dict[str, Any] = {}
 
     class _FakeHuble:
+        name = "huble"
+        default_model = "glm-4.7"
+        descriptor = _HUBLE_DESC
+
         def __init__(self, **kwargs: Any) -> None:
             captured.update(kwargs)
 
-    with patch("agentix.llm.huble.HubleProvider", _FakeHuble):
+        async def complete(self, request: Any) -> Any:  # pragma: no cover
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            pass
+
+    with patch("agentix.drivers.adapters.huble.HubleChatDriver", _FakeHuble):
         build_llm_provider(cfg, model_override=None)
 
     assert captured.get("model") == "glm-4.7"
@@ -95,16 +129,36 @@ def test_build_llm_provider_override_does_not_affect_anthropic_fallback() -> Non
     anthro_captured: dict[str, Any] = {}
 
     class _FakeHuble:
+        name = "huble"
+        default_model = "glm-4.7"
+        descriptor = _HUBLE_DESC
+
         def __init__(self, **kwargs: Any) -> None:
             huble_captured.update(kwargs)
 
+        async def complete(self, request: Any) -> Any:  # pragma: no cover
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            pass
+
     class _FakeAnthropic:
+        name = "anthropic"
+        default_model = "claude-haiku-4-5"
+        descriptor = _ANTHRO_DESC
+
         def __init__(self, **kwargs: Any) -> None:
             anthro_captured.update(kwargs)
 
+        async def complete(self, request: Any) -> Any:  # pragma: no cover
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            pass
+
     with (
-        patch("agentix.llm.huble.HubleProvider", _FakeHuble),
-        patch("agentix.llm.AnthropicProvider", _FakeAnthropic),
+        patch("agentix.drivers.adapters.huble.HubleChatDriver", _FakeHuble),
+        patch("agentix.drivers.adapters.anthropic.AnthropicChatDriver", _FakeAnthropic),
     ):
         build_llm_provider(cfg, model_override="hermes-4-405b")
 

@@ -38,7 +38,7 @@ class AnthropicConfig:
 class HubleConfig:
     """HUBLE gateway config.
 
-    When ``enabled=True``, the runtime builds a :class:`agentix.llm.huble.HubleProvider`
+    When ``enabled=True``, the runtime builds a :class:`agentix.drivers.adapters.huble.HubleChatDriver`
     so every LLM call routes through HUBLE.
     """
 
@@ -87,6 +87,32 @@ class LlmPricingConfig:
 
 
 @dataclass(frozen=True)
+class DriverSpec:
+    """One declared driver instance (the ``drivers:`` config block).
+
+    ``driver`` selects HOW to build: a builtin factory key registered via
+    ``agentix.drivers.factory.register_driver_factory`` (``"anthropic"``,
+    ``"huble"``, ``"melious"``, ``"openai-embedding"``, ``"huble-embedding"``,
+    ``"hf-stt"``, …) or a dotted path ``"pkg.mod:Class"`` for
+    developer-supplied driver classes (seam #13).
+
+    ``api_key_env`` names the ENVIRONMENT VARIABLE holding the credential —
+    never the secret itself (12-factor). ``options`` is an adapter-specific
+    passthrough as hashable key/value pairs (frozen-dataclass discipline).
+    """
+
+    name: str
+    driver: str
+    kind: str = "model"
+    modality: str = "chat"
+    model: str | None = None
+    base_url: str | None = None
+    api_key_env: str | None = None
+    default: bool = False
+    options: tuple[tuple[str, str], ...] = ()
+
+
+@dataclass(frozen=True)
 class KernelConfig:
     """Resolved kernel settings consumed by :mod:`agentix.runtime`.
 
@@ -105,6 +131,12 @@ class KernelConfig:
     # Per-model USD pricing for cost telemetry + budget enforcement. Empty →
     # ``__unknown__`` fallback in CostTrackingMiddleware.
     llm_pricing: LlmPricingConfig = field(default_factory=LlmPricingConfig)
+    # Declared driver instances. Empty → legacy behaviour: the chat chain and
+    # embedding backend are derived from the provider blocks above via
+    # ``derive_driver_specs``. The ``drivers:`` form is canonical going
+    # forward; collapsing the provider blocks into it is the v0.6 config
+    # migration (docs/kernel-config-reference.md).
+    drivers: tuple[DriverSpec, ...] = ()
 
 
 # --- Provider selection — single source of truth for "which provider is active" ---
@@ -156,3 +188,52 @@ def select_enabled_provider(cfg: KernelConfig) -> tuple[str, ProviderConfig]:
     if active:
         return active[0]
     return ("anthropic", cfg.anthropic)
+
+
+def derive_driver_specs(cfg: KernelConfig) -> tuple[DriverSpec, ...]:
+    """Map the legacy provider blocks onto ``DriverSpec`` entries.
+
+    The bridge that keeps operators' existing YAML working: when
+    ``cfg.drivers`` is empty, ``build_drivers`` calls this to derive the
+    chat chain (via :func:`enabled_providers` — activation SSoT unchanged)
+    and the embedding backend from the anthropic/huble/melious blocks.
+    Chat order = failover priority; the first chat spec is the default.
+    """
+    specs: list[DriverSpec] = []
+    for name, _pc in enabled_providers(cfg):
+        specs.append(
+            DriverSpec(
+                name=name,
+                driver=name,
+                kind="model",
+                modality="chat",
+                default=not specs,
+            )
+        )
+    if not specs:
+        # Last-resort Anthropic — matches select_enabled_provider().
+        specs.append(DriverSpec(name="anthropic", driver="anthropic", modality="chat", default=True))
+    if cfg.huble.enabled and cfg.huble.embedding_model and cfg.huble.api_key and cfg.huble.base_url:
+        specs.append(
+            DriverSpec(
+                name="huble-embedding",
+                driver="huble-embedding",
+                modality="embedding",
+                model=cfg.huble.embedding_model,
+                base_url=cfg.huble.base_url,
+                default=True,
+            )
+        )
+    else:
+        # OPENAI_API_KEY fallback is resolved at build time (env may be
+        # absent — the factory skips the spec instead of failing).
+        specs.append(
+            DriverSpec(
+                name="openai-embedding",
+                driver="openai-embedding",
+                modality="embedding",
+                api_key_env="OPENAI_API_KEY",
+                default=True,
+            )
+        )
+    return tuple(specs)

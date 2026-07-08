@@ -16,7 +16,7 @@ import structlog
 
 from agentix.core.middleware.base import Next
 from agentix.core.types import Turn
-from agentix.llm.base import LlmError, LlmInvalidRequest
+from agentix.drivers.base import DriverError, DriverInvalidRequest
 
 log = structlog.get_logger(__name__)
 
@@ -51,10 +51,10 @@ class RetryMiddleware:
         for attempt in range(1, self._max_attempts + 1):
             try:
                 return await next_(turn)
-            except LlmInvalidRequest:
+            except DriverInvalidRequest:
                 # Non-retryable — pass straight through.
                 raise
-            except LlmError as e:
+            except DriverError as e:
                 if not e.retryable or attempt >= self._max_attempts:
                     raise
                 window = min(self._max_delay, self._base_delay * (2 ** (attempt - 1)))
@@ -65,7 +65,7 @@ class RetryMiddleware:
                     attempt=attempt,
                     max_attempts=self._max_attempts,
                     delay_s=round(delay, 3),
-                    provider=e.provider,
+                    provider=e.driver,
                     error=str(e),
                 )
                 await asyncio.sleep(delay)
