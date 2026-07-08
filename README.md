@@ -171,15 +171,12 @@ Detail and worked examples: [`docs/tools.md`](docs/tools.md), [`docs/skills.md`]
 
 - Per-session and per-account spending ceilings, in money; cost is recorded at each LLM
   call, not after the fact.
-- **Safety** — no human approves anything mid-run, so the budget is what ends a hopeless
-  retry loop: when it runs out, the agent stops and hands off honestly instead of trying forever.
-- **Economics** — tokens cost money; the account ceiling stops one expensive tenant from
-  eating the margin of the others.
-- **Design pressure** — every escalation has a price, so the system is pushed to solve
-  problems the cheap way and to learn; it gets smarter by learning, not by spending more.
-- A budget caps how often the model is woken, never how hard it thinks in a turn. Ceilings
-  are policy: set per account, or lifted entirely.
-- The model-window budget is a separate thing — see [Context management](#context-management).
+- The budget is a safety mechanism (ends hopeless retry loops honestly), an economic one
+  (one tenant cannot eat the others' margin) and a design pressure (every escalation has a
+  price — the system gets smarter by learning, not by spending more).
+- A budget caps how often the model is woken, never how hard it thinks in a turn; the
+  model-window budget is a separate thing — see [Context management](#context-management).
+- Detail: [`docs/budgets.md`](docs/budgets.md) (recording, pricing, enforcement, account ceilings).
 
 ### Storage
 
@@ -256,6 +253,7 @@ The kernel is extended only through these seams — never by editing kernel code
 | [`docs/session.md`](docs/session.md) | • Session object, persistence<br>• checkpoints, resume, lease |
 | [`docs/context.md`](docs/context.md) | • Window assembly, budget<br>• compression, eviction tiers, window report |
 | [`docs/memory.md`](docs/memory.md) | • Working memory, memory tiers<br>• page store, semantic recall |
+| [`docs/budgets.md`](docs/budgets.md) | • Money budget: cost recording, pricing table<br>• enforcement (compress-before-abort), account ceilings |
 | [`docs/isolation.md`](docs/isolation.md) | • Runtime isolation model, invariants I1–I7<br>• trust zones |
 | [`docs/a2a.md`](docs/a2a.md) | • Agent-to-agent: card, delegate crossing<br>• deferred substrate |
 | [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md) | • Env vars the kernel reads<br>• provider activation, pricing |

@@ -92,7 +92,8 @@ Vocabulary: this is the **window report** (renamed from the context "X-ray" —
   window is over budget it calls `compress_if_needed` — compress-before-abort. If
   compression cannot shrink further, the turn aborts cleanly instead of invoking
   the provider. The lever is always wired (the middleware default-constructs a
-  manager).
+  manager). The USD cap it enforces, and cost recording, are
+  [`budgets.md`](budgets.md).
 - The split (assemble in the dispatcher, budget in the middleware) is deliberate
   for now; unifying them into a single budget step is the next slice (§9).
 
@@ -135,7 +136,8 @@ wired and kernel-generic (`resume_or_create`). Policy-side consequences:
   raw history) — compression and the session's snapshot policy are the same
   co-designed work.
 - The ContextManager owns the per-step **window/token** budget and reports
-  consumption into the Session's **cost** ledger — two budgets, one flow.
+  consumption into the Session's **cost** ledger — two budgets, one flow
+  ([`budgets.md`](budgets.md) §2).
 - The per-step budget is *scoped per session-task* and *ceilinged per customer* by
   [`isolation.md`](isolation.md) I4/I5, so parallel sessions don't spend N×.
 - Multi-agent: per-agent windows — a sub-agent returns a **distilled conclusion**,
