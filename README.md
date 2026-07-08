@@ -1,15 +1,16 @@
 # Agentix — the agentic-app kernel
 
-**Agentix** is a reusable, app-agnostic kernel for building agentic applications: a
-**deterministic body** that runs the routine work, and wakes an LLM (the *Cortex*) only on
-**cognitive escalation** — when an automated step cannot prove its result is correct. Apps
-supply domain tools, prompts and memory sources; the kernel supplies everything else — the
-engine and middleware spine, the LLM provider router, sessions and checkpoints, context
-management, tools and skills, three-store persistence, budgets, isolation and safety.
+**Agentix** is a reusable, app-agnostic kernel for building agentic applications.
 
-A strict `[K]` kernel / `[A]` app split keeps domain vocabulary out of the core, enforced by
-CI purity gates. The kernel is the frozen API + principles; any terminal, web, mobile or
-desktop agent app builds on it by registering its own tools, skills, job types and policies.
+- A **deterministic body** runs the routine work; an LLM (the *Cortex*) is woken only on
+  **cognitive escalation** — when an automated step cannot prove its result is correct.
+- Apps supply domain tools, prompts and memory sources; the kernel supplies everything else —
+  the engine and middleware spine, the LLM provider router, sessions and checkpoints, context
+  management, tools and skills, three-store persistence, budgets, isolation and safety.
+- A strict `[K]` kernel / `[A]` app split keeps domain vocabulary out of the core, enforced by
+  CI purity gates.
+- The kernel is the frozen API + principles; any terminal, web, mobile or desktop agent app
+  builds on it by registering its own tools, skills, job types and policies.
 
 ## Install
 
@@ -22,8 +23,9 @@ uv sync --extra broker     # + nats-py, only when running against a message brok
 
 ## Quickstart
 
-The kernel takes a *resolved* `KernelConfig` — apps own YAML/env loading and subclass it to
-attach their own settings (env fallbacks: [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md)).
+- The kernel takes a *resolved* `KernelConfig` — apps own YAML/env loading and subclass it to
+  attach their own settings.
+- Env fallbacks the kernel reads directly: [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md).
 
 ```python
 from pathlib import Path
@@ -71,40 +73,56 @@ engine = Engine(sqlite=sqlite, minio=minio, middlewares=[], dispatcher=dispatche
 turn = await engine.run_turn(session, Message(role="user", content="Summarise data/report.csv"))
 ```
 
-`middlewares=[]` is the minimal chain; real apps compose the kernel layers (trajectory
-capture, cost tracking, token budget, safety gate, loop detection, retry — see
-`src/agentix/core/middleware/`) and may extend the order with their own.
+- `middlewares=[]` is the minimal chain; real apps compose the kernel layers (trajectory
+  capture, cost tracking, token budget, safety gate, loop detection, retry — see
+  `src/agentix/core/middleware/`) and may extend the order with their own.
 
 ## Core concepts
 
 ### Kernel / app split
 
-`src/agentix` carries no app-domain vocabulary in its code surface. Two CI gates enforce it:
-`tests/unit/test_kernel_purity.py` (AST scan — no forbidden terms in identifiers or string
-literals) and `tests/unit/test_kernel_standalone.py` (importing the kernel pulls in no app
-module). Apps plug in via seams only (see [How an app plugs in](#how-an-app-plugs-in)).
+- `src/agentix` carries no app-domain vocabulary in its code surface.
+- Two CI gates enforce it: `tests/unit/test_kernel_purity.py` (AST scan — no forbidden terms
+  in identifiers or string literals) and `tests/unit/test_kernel_standalone.py` (importing
+  the kernel pulls in no app module).
+- Apps plug in via seams only — see [How an app plugs in](#how-an-app-plugs-in).
 
 ### Engine and dispatch
 
-A turn engine (`core/engine.py`) runs an ordered middleware chain around each step; the
-agent dispatcher (`core/agent_dispatcher.py`) owns the LLM loop — build request, call the
-provider, dispatch tool calls, append results — bounded by `max_tool_iterations`. Messages
-are an opaque list the engine snapshots per turn. The innermost dispatch is a
-`TurnDispatcher` protocol, so tests swap in fakes without touching the chain.
+- A turn engine (`core/engine.py`) runs an ordered middleware chain around each step.
+- The agent dispatcher (`core/agent_dispatcher.py`) owns the LLM loop — build request, call
+  the provider, dispatch tool calls, append results — bounded by `max_tool_iterations`.
+- Messages are an opaque list the engine snapshots per turn.
+- The innermost dispatch is a `TurnDispatcher` protocol, so tests swap in fakes without
+  touching the chain.
 
 ### Cognitive escalation
 
-An *escalation* happens when an automated step cannot prove its result is correct. The
-deterministic body handles the routine; an escalation is the only event that wakes the
-model. Escalations descend the **escalation ladder** — compiled recipe (model stays asleep)
-→ consult skill → novel reasoning — so the cheapest competent path wins; the loop then
-re-runs the step to re-prove it. If the budget is spent before the step proves clean, the
-agent performs an *operator handoff* (escalation = body wakes the model; handoff = agent
-gives up to a human). The share of escalations absorbed at the compiled tier is the
-system's intelligence; the product metric is *escalations/customer → 0*.
-Detail: [`docs/tools.md`](docs/tools.md).
+- An *escalation* happens when an automated step cannot prove its result is correct.
+- The deterministic body handles the routine; an escalation is the only event that wakes the model.
+- Escalations descend the **escalation ladder** — compiled recipe (model stays asleep) →
+  consult skill → novel reasoning — so the cheapest competent path wins; the loop then
+  re-runs the step to re-prove it.
+- If the budget is spent before the step proves clean, the agent performs an *operator
+  handoff* (distinct term: escalation = body wakes the model; handoff = agent gives up to a human).
+- The share of escalations absorbed at the compiled tier is the system's intelligence; the
+  product metric is *escalations/customer → 0*.
+- Detail: [`docs/tools.md`](docs/tools.md).
 
-### Four calling verbs
+### Tools
+
+- A tool is one callable primitive implementing the `Tool` protocol (`tools/base.py`):
+  pydantic input/output schemas, a `mutates_target` flag, and a declared `verifier`.
+- **A mutating tool without a verifier cannot be registered** — enforced at registration and
+  again at dispatch.
+- `ToolRegistry` maps name → tool with provider-neutral spec conversion.
+- The kernel ships always-on read-only primitives (read, glob, grep, fetch) plus opt-in
+  mutating sandbox primitives (write, patch, shell, git).
+- The `SafetyGate` executes mutations verify-then-rollback, with rate-limit, quiet-hours,
+  idempotency and audit around them.
+- Detail: [`docs/tools.md`](docs/tools.md) (contract, registry, sandbox, safety gate, dispatch flow).
+
+#### The four calling verbs
 
 The caller is always the model, woken by an escalation. The four verbs are the four ways it
 can get work done:
@@ -117,114 +135,104 @@ can get work done:
 
 Detail and worked examples: [`docs/tools.md`](docs/tools.md), [`docs/skills.md`](docs/skills.md).
 
-### Tools
-
-A tool is one callable primitive implementing the `Tool` protocol (`tools/base.py`):
-pydantic input/output schemas, a `mutates_target` flag, and a declared `verifier` — **a
-mutating tool without a verifier cannot be registered**. `ToolRegistry` maps name → tool
-with provider-neutral spec conversion; the kernel ships always-on read-only primitives
-(read, glob, grep, fetch) plus opt-in mutating sandbox primitives (write, patch, shell,
-git). The `SafetyGate` executes mutations verify-then-rollback, with rate-limit,
-quiet-hours, idempotency and audit around them.
-Detail: [`docs/tools.md`](docs/tools.md) (contract, registry, sandbox, safety gate, dispatch flow).
-
 ### Skills
 
-The [Agent Skills](https://agentskills.io) open standard, loaded by an agent-agnostic
-catalog with **progressive disclosure** — cheap name and description at session start, full
-body on demand — so the window stays lean.
-Detail: [`docs/skills.md`](docs/skills.md) (bundle layout, catalog, consult_skill, loader).
+- The [Agent Skills](https://agentskills.io) open standard, loaded by an agent-agnostic catalog.
+- **Progressive disclosure** — cheap name and description at session start, full body on
+  demand — so the window stays lean.
+- Detail: [`docs/skills.md`](docs/skills.md) (bundle layout, catalog, consult_skill, loader).
 
 ### Sessions
 
-The checkpoint-first, resumable unit of a run: create, save, resume-from. Operational state
-in SQLite, full state blob in the object store. App scope is opaque `app_meta`; sessions
-carry a control-plane binding and a parent link for streaming and delegation hierarchy.
-Detail: [`docs/session.md`](docs/session.md) (object, persistence, checkpoints, resume, operator pause, lease).
+- The checkpoint-first, resumable unit of a run: create, save, resume-from.
+- Operational state in SQLite, full state blob in the object store.
+- App scope is opaque `app_meta`.
+- Sessions carry a control-plane binding and a parent link for streaming and delegation hierarchy.
+- Detail: [`docs/session.md`](docs/session.md) (object, persistence, checkpoints, resume, operator pause, lease).
 
 ### Context management
 
-One owner of the model window — assemble, budget, compress, evict by priority tier
-(guardrails > goal > working set > retrieved memory > history), with a per-turn *window
-report* of what entered and why.
-Detail: [`docs/context.md`](docs/context.md) (budget, tiers, compression, window report).
+- One owner of the model window — assemble, budget, compress, evict by priority tier
+  (guardrails > goal > working set > retrieved memory > history).
+- A per-turn *window report* of what entered and why.
+- Detail: [`docs/context.md`](docs/context.md) (budget, tiers, compression, window report).
 
 ### Working memory and memory tiers
 
-Working memory is a structured tried / failed / learned log that survives context
-compression, auto-recorded on tool failure and on recoveries that overturn a blocked path,
-and rendered into a system message every turn. It is the transient tier of three memory
-classifications — **Transient** (one run), **Episodic** (per-tenant and per-context),
-**Learnings** (general) — with verbs to reconcile a finding into a rule and promote it on
-cross-case evidence.
-Detail: [`docs/memory.md`](docs/memory.md) (working memory, page store, semantic recall, maintain seam).
+- Working memory is a structured tried / failed / learned log that survives context
+  compression, auto-recorded on tool failure and on recoveries that overturn a blocked path,
+  and rendered into a system message every turn.
+- It is the transient tier of three memory classifications — **Transient** (one run),
+  **Episodic** (per-tenant and per-context), **Learnings** (general).
+- Verbs reconcile a finding into a rule and promote it on cross-case evidence.
+- Detail: [`docs/memory.md`](docs/memory.md) (working memory, page store, semantic recall, maintain seam).
 
 ### Budgets (token economics)
 
-Per-session and per-account spending ceilings, in money; cost is recorded at each LLM call,
-not after the fact.
-
+- Per-session and per-account spending ceilings, in money; cost is recorded at each LLM
+  call, not after the fact.
 - **Safety** — no human approves anything mid-run, so the budget is what ends a hopeless
   retry loop: when it runs out, the agent stops and hands off honestly instead of trying forever.
 - **Economics** — tokens cost money; the account ceiling stops one expensive tenant from
   eating the margin of the others.
 - **Design pressure** — every escalation has a price, so the system is pushed to solve
   problems the cheap way and to learn; it gets smarter by learning, not by spending more.
-
-A budget caps how often the model is woken, never how hard it thinks in a turn. Ceilings
-are policy: set per account, or lifted entirely. The model-window budget is a separate
-thing — see [Context management](#context-management).
+- A budget caps how often the model is woken, never how hard it thinks in a turn. Ceilings
+  are policy: set per account, or lifted entirely.
+- The model-window budget is a separate thing — see [Context management](#context-management).
 
 ### Storage
 
 Three stores, one invariant: **data and memory never cross.**
 
-- an async **SQLite** store (WAL, busy-timeout, FTS5 search, schema-versioned migrations)
-  for operational state — schema: [`docs/sqlite_schema.sql`](docs/sqlite_schema.sql);
-- an **object store** for checkpoints and bulk data;
-- a **markdown memory** store for episodic pages and learnings.
-
-Detail: [`src/agentix/storage/README.md`](src/agentix/storage/README.md).
+- An async **SQLite** store (WAL, busy-timeout, FTS5 search, schema-versioned migrations)
+  for operational state — schema: [`docs/sqlite_schema.sql`](docs/sqlite_schema.sql).
+- An **object store** for checkpoints and bulk data.
+- A **markdown memory** store for episodic pages and learnings.
+- Detail: [`src/agentix/storage/README.md`](src/agentix/storage/README.md).
 
 ### Isolation and concurrency
 
-One session = one context = one task-tree root; only distilled context crosses any
-boundary. Per-task cost and DB scoping, structured concurrency, a session lease with an
-orphan reaper, and trust-zone broker accounts (edge / control / internal), deny-by-default.
-Detail: [`docs/isolation.md`](docs/isolation.md) (axiom, planes, invariants I1–I7, session hierarchy).
+- One session = one context = one task-tree root; only distilled context crosses any boundary.
+- Per-task cost and DB scoping, structured concurrency, a session lease with an orphan reaper.
+- Trust-zone broker accounts (edge / control / internal), deny-by-default.
+- Detail: [`docs/isolation.md`](docs/isolation.md) (axiom, planes, invariants I1–I7, session hierarchy).
 
 ### A2A
 
-Agent-to-agent over the broker: capability subjects as the registry, an agent card as the
-INFO reply, the *delegate* verb, and activatable key-gated agents with a deterministic
-fallback when no key is present. The kernel ships the discovery model (`a2a/card.py`).
-Detail: [`docs/a2a.md`](docs/a2a.md) (agent card, delegate crossing, deferred substrate).
+- Agent-to-agent over the broker: capability subjects as the registry, an agent card as the
+  INFO reply, the *delegate* verb.
+- Activatable key-gated agents with a deterministic fallback when no key is present.
+- The kernel ships the discovery model (`a2a/card.py`).
+- Detail: [`docs/a2a.md`](docs/a2a.md) (agent card, delegate crossing, deferred substrate).
 
 ### Evaluation
 
-A Verdict spine grading both responses and outcomes, with an activatable LLM judge; honest
-outcome labels derived from verification rather than the agent's (or the Cortex's) own claim.
+- A Verdict spine grading both responses and outcomes, with an activatable LLM judge.
+- Honest outcome labels derived from verification rather than the agent's (or the Cortex's)
+  own claim.
 
 ### Contracts and codegen
 
-Versioned wire contracts as the single source of truth, generating Python, TypeScript and
-Swift, with cross-repo drift guards so consumers never hand-maintain parallel copies.
-Detail: [`docs/contracts-consumer-guide.md`](docs/contracts-consumer-guide.md) and [`contracts/`](contracts/).
+- Versioned wire contracts as the single source of truth, generating Python, TypeScript and
+  Swift.
+- Cross-repo drift guards so consumers never hand-maintain parallel copies.
+- Detail: [`docs/contracts-consumer-guide.md`](docs/contracts-consumer-guide.md) and [`contracts/`](contracts/).
 
 ## Package tour
 
 | Path | What lives there |
 |---|---|
-| `src/agentix/core/` | Engine spine: `Engine`, `AgentDispatcher`, `Session` + `create_session`, checkpoints, `ContextManager`, `WorkingMemory`, `Message`/`Turn` types, `middleware/` (trajectory, cost, budget, safety gate, loop detection, retry, dangling-tool-call, tool-count cap) |
-| `src/agentix/llm/` | `Provider` protocol + adapters (Anthropic incl. OAuth, OpenAI-compatible, Groq, gateway), `ProviderRouter` auto-failover, cost recorder, rate limiter, adversarial judge |
-| `src/agentix/tools/` | `Tool` protocol, `ToolContext`, `ToolRegistry`, `SafetyGate`, kernel primitives (`builtin.py`, `spike/`), sandbox |
-| `src/agentix/skills/` | `SkillCatalog`, `consult_skill`, bundle loader |
-| `src/agentix/storage/` | `SqliteStore`, `MinioStore`, `MemoryStore` |
-| `src/agentix/a2a/` | `AgentCard`, `Capability` — the discovery model |
-| `src/agentix/config.py` | `KernelConfig` + per-provider configs; apps subclass |
-| `src/agentix/runtime.py` | `build_llm_provider` / `build_embedding_provider` factories |
-| `src/agentix/events.py` | Session event bus + wire-contract event types |
-| `src/agentix/embeddings.py` | `EmbeddingProvider` protocol + deterministic fallback |
+| `src/agentix/core/` | • Engine spine: `Engine`, `AgentDispatcher`<br>• `Session` + `create_session`, checkpoints<br>• `ContextManager`, `WorkingMemory`<br>• `Message`/`Turn` types<br>• `middleware/` — trajectory, cost, budget, safety gate, loop detection, retry, dangling-tool-call, tool-count cap |
+| `src/agentix/llm/` | • `Provider` protocol + adapters (Anthropic incl. OAuth, OpenAI-compatible, Groq, gateway)<br>• `ProviderRouter` auto-failover<br>• cost recorder, rate limiter, adversarial judge |
+| `src/agentix/tools/` | • `Tool` protocol, `ToolContext`, `ToolRegistry`<br>• `SafetyGate`<br>• kernel primitives (`builtin.py`, `spike/`), sandbox |
+| `src/agentix/skills/` | • `SkillCatalog`, `consult_skill`<br>• bundle loader |
+| `src/agentix/storage/` | • `SqliteStore`, `MinioStore`, `MemoryStore` |
+| `src/agentix/a2a/` | • `AgentCard`, `Capability` — the discovery model |
+| `src/agentix/config.py` | • `KernelConfig` + per-provider configs; apps subclass |
+| `src/agentix/runtime.py` | • `build_llm_provider` / `build_embedding_provider` factories |
+| `src/agentix/events.py` | • Session event bus + wire-contract event types |
+| `src/agentix/embeddings.py` | • `EmbeddingProvider` protocol + deterministic fallback |
 
 ## How an app plugs in
 
@@ -243,16 +251,16 @@ The kernel is extended only through these seams — never by editing kernel code
 
 | Doc | Single source of truth for |
 |---|---|
-| [`docs/tools.md`](docs/tools.md) | Tool contract, registry, kernel primitives, safety gate, the escalation ladder, the four verbs |
-| [`docs/skills.md`](docs/skills.md) | Skill bundles, catalog, progressive disclosure, loader |
-| [`docs/session.md`](docs/session.md) | Session object, persistence, checkpoints, resume, lease |
-| [`docs/context.md`](docs/context.md) | Window assembly, budget, compression, eviction tiers, window report |
-| [`docs/memory.md`](docs/memory.md) | Working memory, memory tiers, page store, semantic recall |
-| [`docs/isolation.md`](docs/isolation.md) | Runtime isolation model, invariants I1–I7, trust zones |
-| [`docs/a2a.md`](docs/a2a.md) | Agent-to-agent: card, delegate crossing, deferred substrate |
-| [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md) | Env vars the kernel reads, provider activation, pricing |
-| [`docs/sqlite_schema.sql`](docs/sqlite_schema.sql) | Operational-store DDL |
-| [`docs/contracts-consumer-guide.md`](docs/contracts-consumer-guide.md) | Thin-client consumption of the public REST + SSE contract |
+| [`docs/tools.md`](docs/tools.md) | • Tool contract, registry, kernel primitives<br>• safety gate<br>• the escalation ladder, the four verbs |
+| [`docs/skills.md`](docs/skills.md) | • Skill bundles, catalog<br>• progressive disclosure, loader |
+| [`docs/session.md`](docs/session.md) | • Session object, persistence<br>• checkpoints, resume, lease |
+| [`docs/context.md`](docs/context.md) | • Window assembly, budget<br>• compression, eviction tiers, window report |
+| [`docs/memory.md`](docs/memory.md) | • Working memory, memory tiers<br>• page store, semantic recall |
+| [`docs/isolation.md`](docs/isolation.md) | • Runtime isolation model, invariants I1–I7<br>• trust zones |
+| [`docs/a2a.md`](docs/a2a.md) | • Agent-to-agent: card, delegate crossing<br>• deferred substrate |
+| [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md) | • Env vars the kernel reads<br>• provider activation, pricing |
+| [`docs/sqlite_schema.sql`](docs/sqlite_schema.sql) | • Operational-store DDL |
+| [`docs/contracts-consumer-guide.md`](docs/contracts-consumer-guide.md) | • Thin-client consumption of the public REST + SSE contract |
 
 ## Repo layout (shared machinery)
 
@@ -260,12 +268,12 @@ Beyond the kernel package, this repo owns the cross-repo machinery consumers ven
 
 | Path | What |
 |---|---|
-| `contracts/` | Canonical versioned wire contracts (OpenAPI + JSON Schema) + shared types |
-| `constants/cluster.yaml` | Single source for shared values (network, ports, env stages, locale) |
-| `templates/` | `gitignore.base` · `ruff.toml` · `env.template` — vendored/aligned into consumer repos |
-| `libs/` | Canonical shared wire-contract packages, generated from `contracts/` + `constants/` by `scripts/gen_shared.py`; shipped with the wheel |
-| `scripts/` | Codegen (`gen_shared.py`, `gen_ts.py`, `gen_swift.py`) + drift guards (`check_contract_drift.py`, `check_config_drift.py`) |
-| `tests/` | Kernel unit + integration suites, including the two purity gates |
+| `contracts/` | • Canonical versioned wire contracts (OpenAPI + JSON Schema) + shared types |
+| `constants/cluster.yaml` | • Single source for shared values (network, ports, env stages, locale) |
+| `templates/` | • `gitignore.base` · `ruff.toml` · `env.template` — vendored/aligned into consumer repos |
+| `libs/` | • Canonical shared wire-contract packages, generated from `contracts/` + `constants/` by `scripts/gen_shared.py`; shipped with the wheel |
+| `scripts/` | • Codegen: `gen_shared.py`, `gen_ts.py`, `gen_swift.py`<br>• drift guards: `check_contract_drift.py`, `check_config_drift.py` |
+| `tests/` | • Kernel unit + integration suites, including the two purity gates |
 
 ## Development
 
