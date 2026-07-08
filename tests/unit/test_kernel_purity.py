@@ -30,11 +30,12 @@ _FORBIDDEN = (
     "bulk_pin",
     "rename_map",
     "customer_page",
-    # Generated wire packages — cluster vendoring machinery, never a kernel
-    # dependency (the kernel owns its own event vocabulary; drift-guarded by
-    # test_event_contract_drift against contracts/session-event.schema.json).
-    "ludo_shared",
-    "ludo_internal",
+    # The brand itself. Substring match, so this subsumes the app package
+    # (ludo.*), the generated wire packages (ludo_shared/ludo_internal — never a
+    # kernel dependency; event vocabulary is kernel-native, drift-guarded by
+    # test_event_contract_drift) and any future branded token. Docstrings stay
+    # free to mention the app by name.
+    "ludo",
 )
 
 

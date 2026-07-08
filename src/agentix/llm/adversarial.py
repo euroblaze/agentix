@@ -5,8 +5,7 @@ find why ``claim`` could be wrong. Returns ``(refuted, reason)``;
 callers demote confidence on a credible refutation.
 
 Best-effort: call failure / unparseable response degrade to
-``(False, <diagnostic>)``. Disable via ``AGENTIX_ADVERSARIAL_DISABLED``
-(legacy ``LUDO_ADVERSARIAL_DISABLED`` still honoured).
+``(False, <diagnostic>)``. Disable via ``AGENTIX_ADVERSARIAL_DISABLED``.
 Prompt templates live with the calling primitive.
 """
 
@@ -24,12 +23,11 @@ from agentix.llm.base import LlmRequest, Provider
 log = structlog.get_logger(__name__)
 
 _DISABLED_ENV = "AGENTIX_ADVERSARIAL_DISABLED"
-_DISABLED_ENV_LEGACY = "LUDO_ADVERSARIAL_DISABLED"  # back-compat
 
 
 def is_disabled() -> bool:
-    """``AGENTIX_ADVERSARIAL_DISABLED=1`` (or legacy ``LUDO_…``) skips the refute pass."""
-    val = (os.environ.get(_DISABLED_ENV) or os.environ.get(_DISABLED_ENV_LEGACY) or "").strip().lower()
+    """``AGENTIX_ADVERSARIAL_DISABLED=1`` skips the refute pass."""
+    val = (os.environ.get(_DISABLED_ENV) or "").strip().lower()
     return val in {"1", "true", "yes", "on"}
 
 

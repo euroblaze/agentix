@@ -105,10 +105,10 @@ _SCHEMA_STATEMENTS: tuple[str, ...] = (
         -- rather than the agent's terminal message. NULL until computed at
         -- session close; rows that predate it stay NULL (unjudged).
         outcome TEXT,
-        -- Control-plane binding: the gateway-assigned Migration id
-        -- (``ludo_session_id``) this Session runs. Lets the gateway project a
-        -- resumable event stream and correlate observability without keeping a
-        -- separate mapping. NULL for runs with no control plane (local CLI).
+        -- Control-plane binding: the control-plane-assigned run id this
+        -- Session executes. Lets the control plane project a resumable event
+        -- stream and correlate observability without keeping a separate
+        -- mapping. NULL for runs with no control plane (local CLI).
         control_plane_id TEXT,
         -- A2A delegation link: the Session that spawned this one. NULL for
         -- top-level runs. Self-referential so a delegated child can be walked
