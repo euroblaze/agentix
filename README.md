@@ -208,6 +208,7 @@ Three stores, one invariant: **data and memory never cross.**
 - A Verdict spine grading both responses and outcomes, with an activatable LLM judge.
 - Honest outcome labels derived from verification rather than the agent's (or the Cortex's)
   own claim.
+- Detail: [`docs/eval.md`](docs/eval.md) (honest outcomes, refute pass, Verdict spine, graders).
 
 ### Contracts and codegen
 
@@ -256,6 +257,7 @@ The kernel is extended only through these seams — never by editing kernel code
 | [`docs/budgets.md`](docs/budgets.md) | • Money budget: cost recording, pricing table<br>• enforcement (compress-before-abort), account ceilings |
 | [`docs/isolation.md`](docs/isolation.md) | • Runtime isolation model, invariants I1–I7<br>• trust zones |
 | [`docs/a2a.md`](docs/a2a.md) | • Agent-to-agent: card, delegate crossing<br>• deferred substrate |
+| [`docs/eval.md`](docs/eval.md) | • Honest outcomes, adversarial refute<br>• Verdict spine, Grader A/B, activatable judge |
 | [`docs/kernel-config-reference.md`](docs/kernel-config-reference.md) | • Env vars the kernel reads<br>• provider activation, pricing |
 | [`docs/sqlite_schema.sql`](docs/sqlite_schema.sql) | • Operational-store DDL |
 | [`docs/contracts-consumer-guide.md`](docs/contracts-consumer-guide.md) | • Thin-client consumption of the public REST + SSE contract |

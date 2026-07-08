@@ -145,7 +145,7 @@ wired and kernel-generic (`resume_or_create`). Policy-side consequences:
   P-ISO-2; inter-agent NATS-Account isolation is
   `ludo-agent/docs/proposals/agentic-cluster-a2a.md`.
 - Every context policy should ship behind eval (Verdict graders,
-  `ludo-agent/docs/proposals/eval-validation.md`) as a measurable experiment.
+  [`eval.md`](eval.md)) as a measurable experiment.
 
 ## 9. Open decisions
 
