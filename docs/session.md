@@ -114,7 +114,7 @@ Tests: `tests/unit/storage/test_session_lease.py`.
   side-effect of the TrajectoryCapture middleware and the dispatcher persist path
   (never by the action layer). A searchable trajectory substrate.
 - **Cost** — token + `cost_usd` deltas recorded per session/turn at each LLM call,
-  not after the fact; `budget_usd` is the ceiling ([`overview.md`](overview.md)
+  not after the fact; `budget_usd` is the ceiling ([`README.md`](../README.md)
   § Budgets).
 - **Honesty** — `sessions.outcome` (derived from session-end verification, not the
   model's own claim) and `intervention_type` (the human-touchpoint metric) feed
