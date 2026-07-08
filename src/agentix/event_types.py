@@ -1,14 +1,35 @@
 """Contract B v2 event types — the agent→control-plane lifecycle stream.
 
-The canonical enum is the **shared** ``ludo_shared.EventType`` (generated from
-``session-event.schema.json``, locked #430-D). This module re-exports it plus the named
-module-level aliases the action layer uses (`SESSION_STARTED` …) — they ARE the EventType
-members now, so there is no hand-kept list to drift. The agent must only emit these.
+The kernel owns this vocabulary. The cross-cluster wire contract
+(``contracts/session-event.schema.json``, locked #430-D) stays the canonical seam;
+``tests/unit/test_event_contract_drift.py`` asserts this enum and the schema never
+drift, so no generated app package is imported here. Module-level aliases
+(`SESSION_STARTED` …) ARE the EventType members — there is no hand-kept list to
+drift. The agent must only emit these.
 """
 
 from __future__ import annotations
 
-from ludo_shared import EVENT_TYPES, EventType
+from enum import StrEnum
+
+
+class EventType(StrEnum):
+    """Session-event type (agent → control plane); mirror of the wire schema."""
+
+    SESSION_STARTED = "session_started"
+    SESSION_END = "session_end"
+    MODEL_STARTED = "model_started"
+    MODEL_COMPLETED = "model_completed"
+    JOB_STARTED = "job_started"
+    JOB_COMPLETED = "job_completed"
+    JOB_FAILED = "job_failed"
+    TURN_STARTED = "turn_started"
+    TURN_COMPLETED = "turn_completed"
+    SAFETY_EVENT = "safety_event"
+    CHECKPOINT_REQUESTED = "checkpoint_requested"
+
+
+EVENT_TYPES = frozenset(EventType)
 
 # Session lifecycle (the whole run).
 SESSION_STARTED = EventType.SESSION_STARTED

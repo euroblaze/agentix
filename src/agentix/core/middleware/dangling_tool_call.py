@@ -21,7 +21,7 @@ from agentix.core.types import Message, Turn
 
 log = structlog.get_logger(__name__)
 
-_SYNTHETIC_REASON = "[ludo] tool call interrupted; injecting synthetic error result"
+_SYNTHETIC_REASON = "[agentix] tool call interrupted; injecting synthetic error result"
 
 
 class DanglingToolCallMiddleware:

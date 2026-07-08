@@ -30,6 +30,11 @@ _FORBIDDEN = (
     "bulk_pin",
     "rename_map",
     "customer_page",
+    # Generated wire packages — cluster vendoring machinery, never a kernel
+    # dependency (the kernel owns its own event vocabulary; drift-guarded by
+    # test_event_contract_drift against contracts/session-event.schema.json).
+    "ludo_shared",
+    "ludo_internal",
 )
 
 
@@ -57,6 +62,12 @@ def _code_surface(source: str) -> list[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Name):
             surface.append(node.id.lower())
+        elif isinstance(node, ast.Import):
+            surface.extend(alias.name.lower() for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            # Import statements are code surface too — a `from ludo_shared import …`
+            # must trip the gate, not just uses of the imported name.
+            surface.append(node.module.lower())
         elif isinstance(node, ast.Attribute):
             surface.append(node.attr.lower())
         elif isinstance(node, ast.arg):

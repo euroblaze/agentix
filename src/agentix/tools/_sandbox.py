@@ -55,7 +55,7 @@ class SandboxBoundary:
 
 
 _SANDBOX: contextvars.ContextVar[tuple[SandboxBoundary, ...] | None] = contextvars.ContextVar(
-    "_ludo_sandbox", default=None
+    "_agentix_sandbox", default=None
 )
 
 

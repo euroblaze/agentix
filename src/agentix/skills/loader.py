@@ -243,7 +243,7 @@ def _import_tool_module(bundle_dir: Path, manifest: dict[str, Any]) -> Any:
     tool_file = bundle_dir / "tool.py"
     if not tool_file.exists():
         raise SkillManifestError(f"{bundle_dir}: tool.py not found")
-    module_name = f"ludo_skill__{manifest['name']}"
+    module_name = f"agentix_skill__{manifest['name']}"
     spec = importlib.util.spec_from_file_location(module_name, tool_file)
     if spec is None or spec.loader is None:
         raise SkillManifestError(f"{tool_file}: importlib spec failed")
