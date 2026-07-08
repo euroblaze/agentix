@@ -23,6 +23,7 @@ from agentix.drivers.base import Driver, DriverDescriptor
 if TYPE_CHECKING:
     from agentix.drivers.chat import ChatDriver
     from agentix.drivers.embedding import EmbeddingDriver
+    from agentix.drivers.speech import SttDriver
 
 log = structlog.get_logger(__name__)
 
@@ -95,6 +96,13 @@ class DriverRegistry:
         if not hasattr(driver, "embed"):
             raise TypeError(f"driver {driver.descriptor.name!r} is not an EmbeddingDriver")
         return cast("EmbeddingDriver", driver)
+
+    def stt(self, name: str | None = None) -> SttDriver:
+        """The default (or named) speech-to-text driver; raises when absent."""
+        driver = self._default_for("model", "stt", name)
+        if not hasattr(driver, "transcribe"):
+            raise TypeError(f"driver {driver.descriptor.name!r} is not an SttDriver")
+        return cast("SttDriver", driver)
 
     def embedding_or_none(self, name: str | None = None) -> EmbeddingDriver | None:
         """Like :meth:`embedding` but None when no backend is configured —

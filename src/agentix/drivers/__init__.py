@@ -31,11 +31,13 @@ from agentix.drivers.embedding import (
     HubleEmbeddingDriver,
     OpenAIEmbeddingDriver,
 )
+from agentix.drivers.factory import build_drivers, register_driver_factory
 from agentix.drivers.limiter import (
     configure_driver_capacity,
     current_limit,
     driver_capacity,
 )
+from agentix.drivers.registry import DriverConflict, DriverRegistry
 from agentix.drivers.router import (
     ChatFailoverChain,
     FailoverCallback,
@@ -47,10 +49,12 @@ from agentix.drivers.session import (
     session_scope,
     unbind_session,
 )
+from agentix.drivers.speech import AudioSource, SttDriver, Transcript
 
 __all__ = [
     "KNOWN_MODALITIES",
     "KNOWN_SOURCES",
+    "AudioSource",
     "CachedEmbeddingDriver",
     "ChatDriver",
     "ChatFailoverChain",
@@ -58,10 +62,12 @@ __all__ = [
     "ChatResponse",
     "CostRecordingChatDriver",
     "Driver",
+    "DriverConflict",
     "DriverDescriptor",
     "DriverError",
     "DriverInvalidRequest",
     "DriverRateLimited",
+    "DriverRegistry",
     "DriverUnavailable",
     "EmbeddingCache",
     "EmbeddingDriver",
@@ -71,12 +77,16 @@ __all__ = [
     "HubleEmbeddingDriver",
     "NoDriversAvailable",
     "OpenAIEmbeddingDriver",
+    "SttDriver",
     "ToolSpec",
+    "Transcript",
     "bind_session",
+    "build_drivers",
     "configure_driver_capacity",
     "current_limit",
     "current_session_id",
     "driver_capacity",
+    "register_driver_factory",
     "session_scope",
     "tool_to_spec",
     "unbind_session",

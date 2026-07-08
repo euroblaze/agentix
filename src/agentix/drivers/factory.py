@@ -103,6 +103,17 @@ def _build_openai_embedding(spec: DriverSpec, cfg: KernelConfig) -> Driver:
     return OpenAIEmbeddingDriver(api_key=_env_key(spec), base_url=spec.base_url, **kwargs)
 
 
+def _build_hf_stt(spec: DriverSpec, cfg: KernelConfig) -> Driver:
+    from agentix.drivers.adapters.hf import HfSttDriver
+
+    kwargs: dict[str, str] = {}
+    if spec.model:
+        kwargs["model"] = spec.model
+    if spec.base_url:
+        kwargs["base_url"] = spec.base_url
+    return HfSttDriver(api_key=_env_key(spec), **kwargs)  # type: ignore[arg-type]
+
+
 def _build_huble_embedding(spec: DriverSpec, cfg: KernelConfig) -> Driver:
     from agentix.drivers.embedding import HubleEmbeddingDriver
 
@@ -121,6 +132,7 @@ for _key, _factory in (
     ("melious", _build_melious),
     ("openai-embedding", _build_openai_embedding),
     ("huble-embedding", _build_huble_embedding),
+    ("hf-stt", _build_hf_stt),
 ):
     register_driver_factory(_key, _factory)
 
