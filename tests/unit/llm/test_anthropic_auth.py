@@ -111,7 +111,9 @@ def test_keychain_token_source_happy_path() -> None:
     """macOS ``security find-generic-password -s <service> -w`` returns
     the raw JSON blob Claude Code stored."""
     payload = json.dumps({"claudeAiOauth": {"accessToken": "sk-ant-oat01-kc"}})
-    with patch("agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout=payload)) as mock:
+    with patch(
+        "agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout=payload)
+    ) as mock:
         src = KeychainTokenSource(service_name="Claude Code-credentials")
         token, is_oauth = src.get_token()
     assert token == "sk-ant-oat01-kc"
@@ -152,7 +154,9 @@ def test_keychain_token_source_timeout() -> None:
 
 
 def test_keychain_token_source_malformed_payload() -> None:
-    with patch("agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout="not json")):
+    with patch(
+        "agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout="not json")
+    ):
         src = KeychainTokenSource()
         with pytest.raises(LlmInvalidRequest, match="not JSON"):
             src.get_token()
@@ -233,7 +237,9 @@ def test_resolve_keychain_then_file(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     path = tmp_path / "creds.json"
     path.write_text(json.dumps({"claudeAiOauth": {"accessToken": "sk-ant-oat01-file"}}))
     kc_payload = json.dumps({"claudeAiOauth": {"accessToken": "sk-ant-oat01-kc"}})
-    with patch("agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout=kc_payload)):
+    with patch(
+        "agentix.drivers.adapters.anthropic_auth.subprocess.run", return_value=_fake_completed(stdout=kc_payload)
+    ):
         src = resolve_token_source(credentials_path=path, keychain_service="Claude Code-credentials")
         assert src.get_token() == ("sk-ant-oat01-kc", True)
 

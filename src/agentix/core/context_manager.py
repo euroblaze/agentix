@@ -85,8 +85,7 @@ class AssembledContext:
             "compressed": self.compressed,
             "over_budget": self.total_tokens > self.budget_tokens,
             "messages": [
-                {"tier": e.tier.name, "role": e.role, "tokens": e.tokens, "reason": e.reason}
-                for e in self.entries
+                {"tier": e.tier.name, "role": e.role, "tokens": e.tokens, "reason": e.reason} for e in self.entries
             ],
         }
 
