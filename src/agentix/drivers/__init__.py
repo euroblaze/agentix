@@ -21,19 +21,47 @@ from agentix.drivers.chat import (
     ToolSpec,
     tool_to_spec,
 )
+from agentix.drivers.cost import CostRecordingChatDriver
+from agentix.drivers.limiter import (
+    configure_driver_capacity,
+    current_limit,
+    driver_capacity,
+)
+from agentix.drivers.router import (
+    ChatFailoverChain,
+    FailoverCallback,
+    NoDriversAvailable,
+)
+from agentix.drivers.session import (
+    bind_session,
+    current_session_id,
+    session_scope,
+    unbind_session,
+)
 
 __all__ = [
     "KNOWN_MODALITIES",
     "KNOWN_SOURCES",
     "ChatDriver",
+    "ChatFailoverChain",
     "ChatRequest",
     "ChatResponse",
+    "CostRecordingChatDriver",
     "Driver",
     "DriverDescriptor",
     "DriverError",
     "DriverInvalidRequest",
     "DriverRateLimited",
     "DriverUnavailable",
+    "FailoverCallback",
+    "NoDriversAvailable",
     "ToolSpec",
+    "bind_session",
+    "configure_driver_capacity",
+    "current_limit",
+    "current_session_id",
+    "driver_capacity",
+    "session_scope",
     "tool_to_spec",
+    "unbind_session",
 ]

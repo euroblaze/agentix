@@ -187,7 +187,7 @@ async def test_no_session_bound_emits_warning_with_token_counts() -> None:
     wrapper = CostRecordingProvider(inner, sqlite=sqlite)
 
     # capture structlog output via the stdlib logging bridge
-    with patch("agentix.llm.cost_recorder.log") as mock_log:
+    with patch("agentix.drivers.cost.log") as mock_log:
         await wrapper.complete(_make_request())
         # The warning method must have been called (not debug).
         mock_log.warning.assert_called_once()
