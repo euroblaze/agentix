@@ -37,8 +37,8 @@ from verification, never from the model's own claim.**
   `(refuted, reason)`; callers demote confidence on a credible refutation.
 - **Best-effort by design** — a failed call or unparseable response degrades to
   `(False, <diagnostic>)`; an LLM-based check must never silently hard-block (§6).
-- Disable via `AGENTIX_ADVERSARIAL_DISABLED` (legacy `LUDO_ADVERSARIAL_DISABLED`
-  honoured). Prompt templates live with the calling primitive, not here.
+- Disable via `AGENTIX_ADVERSARIAL_DISABLED`. Prompt templates live with the
+  calling primitive, not here.
 
 ---
 

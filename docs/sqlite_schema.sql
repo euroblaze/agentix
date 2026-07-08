@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS sessions (
         -- rather than the agent's terminal message. NULL until computed at
         -- session close; rows that predate it stay NULL (unjudged).
         outcome TEXT,
-        -- Control-plane binding: the gateway-assigned Migration id
-        -- (``ludo_session_id``) this Session runs. NULL for local runs.
+        -- Control-plane binding: the control-plane-assigned run id this
+        -- Session executes. NULL for local runs.
         control_plane_id TEXT,
         -- A2A delegation link: the Session that spawned this one (self-ref).
         -- NULL for top-level runs.

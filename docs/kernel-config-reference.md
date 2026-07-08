@@ -15,8 +15,7 @@ at provider-construction time, mostly as fallbacks when the corresponding
 | `LLMHUB_API_KEY` | `llm/huble.py` | HUBLE key fallback (`huble.api_key`). |
 | `GROQ_API_KEY` | `llm/groq.py` | Groq provider key. |
 | `OPENAI_API_KEY` | `runtime.build_embedding_provider`, `embeddings.py` | Enables the OpenAI embedding fallback when HUBLE embeddings aren't configured. |
-| `AGENTIX_ANTHROPIC_BILLING_HEADER` | `llm/anthropic.py` | Overrides the OAuth billing header. **Preferred name.** |
-| `LUDO_ANTHROPIC_BILLING_HEADER` | `llm/anthropic.py` | **Deprecated** legacy alias for the above — honoured but warns once; removal target agentix 0.3. Precedence: `AGENTIX_*` > `LUDO_*` > built-in default. |
+| `AGENTIX_ANTHROPIC_BILLING_HEADER` | `llm/anthropic.py` | Overrides the OAuth billing header. (The legacy branded alias was removed in agentix 0.3.) |
 | `CLAUDE_CODE_OAUTH_TOKEN` | `llm/anthropic_auth.py` | Anthropic OAuth token source (1st). |
 | `ANTHROPIC_AUTH_TOKEN` | `llm/anthropic_auth.py` | Anthropic OAuth token source (2nd). |
 | `ANTHROPIC_API_KEY` | `llm/anthropic_auth.py` | Anthropic API-key token source (3rd; typical for CI). |
