@@ -81,10 +81,13 @@ turn = await engine.run_turn(session, Message(role="user", content="Summarise da
 
 ### Kernel / app split
 
-- `src/agentix` carries no app-domain vocabulary in its code surface.
-- Two CI gates enforce it: `tests/unit/test_kernel_purity.py` (AST scan — no forbidden terms
-  in identifiers or string literals) and `tests/unit/test_kernel_standalone.py` (importing
-  the kernel pulls in no app module).
+- `src/agentix` carries no app-domain vocabulary in its code surface, and the kernel wheel
+  ships no branded package.
+- Three CI gates enforce it: `tests/unit/test_kernel_purity.py` (AST scan — no forbidden
+  terms in identifiers, string literals or imports), `tests/unit/test_kernel_standalone.py`
+  (importing the kernel pulls in no app or generated wire module) and
+  `tests/unit/test_event_contract_drift.py` (the kernel's native event vocabulary equals the
+  wire contract without importing it).
 - Apps plug in via seams only — see [How an app plugs in](#how-an-app-plugs-in).
 
 ### Engine and dispatch
@@ -229,26 +232,31 @@ Three stores, one invariant: **data and memory never cross.**
 | `src/agentix/a2a/` | • `AgentCard`, `Capability` — the discovery model |
 | `src/agentix/config.py` | • `KernelConfig` + per-provider configs; apps subclass |
 | `src/agentix/runtime.py` | • `build_llm_provider` / `build_embedding_provider` factories |
-| `src/agentix/events.py` | • Session event bus + wire-contract event types |
+| `src/agentix/events.py` | • Session event bus + the kernel's own neutral Contract-B envelope (drift-guarded against `contracts/`) |
 | `src/agentix/embeddings.py` | • `EmbeddingProvider` protocol + deterministic fallback |
 
 ## How an app plugs in
 
-The kernel is extended only through these seams — never by editing kernel code:
+The kernel is extended only through its **11 seams** — never by editing kernel code.
+Canonical catalog with mechanisms and examples: [`docs/seams.md`](docs/seams.md).
 
 - **`KernelConfig` subclass** — attach the app's resolved settings.
 - **`SafetyGate` hooks** — override `rollback` (required with mutating tools),
   `_resolve_contract`, `_derive_verifier_fields`.
 - **Dispatcher policies** — `TerminationPolicy` and `DispatchGuard` on `AgentDispatcher`.
 - **`Tool` implementations** and exception `to_error_details()` for actionable errors.
+- **`ToolContext` handles** — the app injects its own `source`/`target` clients; opaque to the kernel.
 - **Allowlist extenders** — `register_allowed_hosts` (web fetch), `register_allowed_binaries` (shell).
 - **Middleware** — compose the kernel chain (a prefix is fine) and extend it with app layers.
 - **Skills** — drop bundles under the app's `skills_root`; the catalog discovers them.
+- **Storage** — use the three stores as-is or subclass to add app tables.
+- **Events out** — register a bus sink; the app owns the transport (the kernel knows no broker).
 
 ## Kernel docs
 
 | Doc | Single source of truth for |
 |---|---|
+| [`docs/seams.md`](docs/seams.md) | • The 11 kernel↔app contact points<br>• what the kernel will never contain, and the gates enforcing it |
 | [`docs/tools.md`](docs/tools.md) | • Tool contract, registry, kernel primitives<br>• safety gate<br>• the escalation ladder, the four verbs |
 | [`docs/skills.md`](docs/skills.md) | • Skill bundles, catalog<br>• progressive disclosure, loader |
 | [`docs/session.md`](docs/session.md) | • Session object, persistence<br>• checkpoints, resume, lease |
@@ -271,9 +279,9 @@ Beyond the kernel package, this repo owns the cross-repo machinery consumers ven
 | `contracts/` | • Canonical versioned wire contracts (OpenAPI + JSON Schema) + shared types |
 | `constants/cluster.yaml` | • Single source for shared values (network, ports, env stages, locale) |
 | `templates/` | • `gitignore.base` · `ruff.toml` · `env.template` — vendored/aligned into consumer repos |
-| `libs/` | • Canonical shared wire-contract packages, generated from `contracts/` + `constants/` by `scripts/gen_shared.py`; shipped with the wheel |
+| `libs/` | • Canonical shared wire-contract packages, generated from `contracts/` + `constants/` by `scripts/gen_shared.py`; consumers **vendor** them — the kernel wheel ships `src/agentix` only |
 | `scripts/` | • Codegen: `gen_shared.py`, `gen_ts.py`, `gen_swift.py`<br>• drift guards: `check_contract_drift.py`, `check_config_drift.py` |
-| `tests/` | • Kernel unit + integration suites, including the two purity gates |
+| `tests/` | • Kernel unit + integration suites, including the three purity/drift gates |
 
 ## Development
 

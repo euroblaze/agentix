@@ -18,28 +18,33 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from typing import Any
 
-from ludo_shared import SessionEvent as _WireSessionEvent
-from pydantic import ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from agentix.event_types import SCHEMA_VERSION
+from agentix.event_types import SCHEMA_VERSION, EventType
 
 
-class SessionEvent(_WireSessionEvent):
+class SessionEvent(BaseModel):
     """One Contract B v2 lifecycle event in a session's stream.
 
-    The wire envelope (6 fields, locked #430-D) is the canonical **shared** model
-    (`ludo_shared.SessionEvent`, generated from `session-event.schema.json`); this adds the
-    agent's construction defaults — auto ``at`` timestamp + default ``schema_version`` — and is
-    frozen (immutable, hashable). ``type`` is one of :data:`agentix.event_types.EVENT_TYPES`;
+    The 6-field wire envelope (locked #430-D) is defined by the cross-cluster
+    contract (`contracts/session-event.schema.json`); the kernel owns this neutral
+    model of it (drift-guarded by ``test_event_contract_drift``) and adds the
+    construction defaults — auto ``at`` timestamp + default ``schema_version``. Frozen
+    (immutable, hashable). ``type`` is one of :data:`agentix.event_types.EVENT_TYPES`;
     ``checkpoint_required`` is the per-event operator-review flag (reserved) — distinct from a
     resumable state checkpoint.
     """
 
     model_config = ConfigDict(extra="allow", frozen=True)
 
+    session_id: str
+    type: EventType
+    payload: dict[str, Any] = Field(default_factory=dict)
     at: str = Field(default_factory=lambda: datetime.now(tz=UTC).isoformat())
     schema_version: str = SCHEMA_VERSION
+    checkpoint_required: bool = False
 
 
 class SessionEventBus:

@@ -16,27 +16,32 @@ and the `scripts/` generators + drift-checkers.
 
 ## Kernel purity — the one hard rule
 
-`src/agentix` carries no app-domain (Odoo/migration) vocabulary in its code surface. Two CI gates
-enforce it:
-- `tests/unit/test_kernel_purity.py` — AST scan; no forbidden terms in identifiers/string literals.
-- `tests/unit/test_kernel_standalone.py` — importing the kernel pulls in no `ludo` module.
+`src/agentix` carries no app-domain (Odoo/migration) vocabulary in its code surface, and the
+kernel wheel ships no branded package. Three CI gates enforce it:
+- `tests/unit/test_kernel_purity.py` — AST scan; no forbidden terms in identifiers, string
+  literals or imports (incl. `ludo_shared`/`ludo_internal`).
+- `tests/unit/test_kernel_standalone.py` — importing the kernel pulls in no `ludo`,
+  `ludo_shared` or `ludo_internal` module.
+- `tests/unit/test_event_contract_drift.py` — the kernel's native event vocabulary
+  (`agentix.event_types`/`agentix.events`) stays equal to `contracts/session-event.schema.json`
+  without importing a generated package.
 
-Apps plug in via seams: a `KernelConfig` subclass, `SafetyGate` hooks
-(`rollback`/`_resolve_contract`/`_derive_verifier_fields`), the dispatcher's
-`TerminationPolicy`/`DispatchGuard`, `Tool`/exception `to_error_details()`, and the
-`register_allowed_hosts`/`register_allowed_binaries` allowlist extenders. The kernel's one branded
-dependency is the vendored wire-contract package `ludo_shared`/`ludo_internal` (Contract-B types +
-NATS constants — data contracts, not app logic).
+Apps plug in via the 11 seams — canonical catalog in `docs/seams.md`: `KernelConfig` subclass,
+`SafetyGate` hooks (`rollback`/`_resolve_contract`/`_derive_verifier_fields`), the dispatcher's
+`TerminationPolicy`/`DispatchGuard`, `Tool`/exception `to_error_details()`, `ToolContext`
+handles, the `register_allowed_hosts`/`register_allowed_binaries` allowlist extenders, skills,
+middleware append, storage subclassing, and the event-bus sink.
 
 ## Layout
 
 - `src/agentix/` — the kernel package (`core/`, `llm/`, `tools/`, `skills/`, `a2a/`, `storage`,
   `config.py`, `runtime.py`).
-- `docs/` — kernel docs: `context`, `session`, `isolation`, `tools`, `skills`,
+- `docs/` — kernel docs: `seams`, `context`, `session`, `isolation`, `tools`, `skills`,
   `memory`, `budgets`, `a2a`, `eval`, `kernel-config-reference`, `sqlite_schema.sql`,
   + `contracts-consumer-guide.md`. The kernel overview lives in `README.md`.
-- `contracts/` · `constants/` · `templates/` · `libs/` · `scripts/` — shared vendoring machinery.
-- `tests/` — kernel unit + integration; includes the two purity gates above.
+- `contracts/` · `constants/` · `templates/` · `libs/` · `scripts/` — shared vendoring machinery
+  (consumers vendor; never imported by the kernel, never in the wheel).
+- `tests/` — kernel unit + integration; includes the three purity/drift gates above.
 
 ## Workflow
 

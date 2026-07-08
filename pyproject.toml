@@ -33,10 +33,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# The kernel + the canonical cross-cluster wire-contract packages this repo owns.
-# ludo_shared / ludo_internal are generated here (scripts/gen_shared.py) — canonical,
-# not vendored — so the kernel imports them directly.
-packages = ["src/agentix", "libs/python/ludo_shared", "libs/internal/ludo_internal"]
+# Kernel-only wheel. The generated wire packages (libs/python/ludo_shared,
+# libs/internal/ludo_internal) are cluster vendoring machinery — canonical here
+# (scripts/gen_shared.py), consumed by consumers VENDORING them, never via this
+# wheel. The kernel owns its own event vocabulary (agentix.event_types /
+# agentix.events), drift-guarded against contracts/session-event.schema.json.
+packages = ["src/agentix"]
 
 [dependency-groups]
 dev = [
