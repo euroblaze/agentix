@@ -1,20 +1,29 @@
 # Seams — the kernel↔app contact points
 
-The definitive catalog of how a purpose-specific app plugs into the generic kernel.
-Everything an app supplies enters through one of these 11 seams; everything else is
-kernel-internal. LUDO examples are illustrations of *an* app, not part of the kernel.
+**Status:** living doc · **Scope:** Agentix kernel `[K]` (app-agnostic)
 
-## The 11 seams
+**Single source of truth for the kernel↔app seams in `docs/`** — the definitive
+catalog of how a purpose-specific app plugs into the generic kernel. Everything an
+app supplies enters through one of these 12 seams; everything else is
+kernel-internal. Not to be confused with [`contracts.md`](contracts.md): a
+**seam** is an *in-process* contact point (a Python protocol, subclass or
+registration call — one process, one language); a **contract** is a *cross-process
+wire seam* between repos (versioned, serialized schemas, vendored + drift-guarded).
+LUDO examples below are illustrations of *an* app, not part of the kernel.
+
+## The 12 seams
 
 ### 1. Config — `KernelConfig` subclass
 `src/agentix/config.py`. A frozen dataclass with the kernel's resolved settings (storage
-paths, LLM provider configs, budget). The app subclasses it and appends its own resolved
-fields; the kernel runtime factories accept the subclass unchanged.
+paths, LLM provider configs, budget — env fallbacks:
+[`kernel-config-reference.md`](kernel-config-reference.md)). The app subclasses it and
+appends its own resolved fields; the kernel runtime factories accept the subclass unchanged.
 *LUDO:* `ResolvedConfig` adds source/target ERP credentials + a per-customer registry.
 
 ### 2. SafetyGate hooks — subclass 3 methods
-`src/agentix/tools/safety.py` (`SafetyGate`). The kernel enforces verify-after-mutate;
-the app supplies the domain knowledge via three overrides:
+`src/agentix/tools/safety.py` (`SafetyGate`; the flow: [`tools.md`](tools.md) §5). The
+kernel enforces verify-after-mutate; the app supplies the domain knowledge via three
+overrides:
 - `rollback()` — undo a mutation whose verification drifted (default: `NotImplementedError`).
 - `_resolve_contract()` — per-model verify contract + derived check fields (default: count+sample).
 - `_derive_verifier_fields()` — map tool-input fields the verifier can't name-match (default: `{}`).
@@ -22,25 +31,28 @@ the app supplies the domain knowledge via three overrides:
 
 ### 3. TerminationPolicy — protocol
 `src/agentix/core/agent_dispatcher.py` (`TerminationPolicy`): `observe(turn)` +
-`terminal_message(turn)`. The app defines what "done" means and can force-terminate the loop.
+`terminal_message(turn)`. The app defines what "done" means and can force-terminate the
+loop ([`engine.md`](engine.md) §4).
 *LUDO:* terminate once every requested model loaded successfully.
 
 ### 4. DispatchGuard — pre-execution veto
 `src/agentix/core/agent_dispatcher.py` (`DispatchGuard`): a callable inspecting each pending
-tool call; returns a synthesized failure `ToolCallResult` to refuse it, or `None` to allow.
+tool call; returns a synthesized failure `ToolCallResult` to refuse it, or `None` to allow
+([`engine.md`](engine.md) §4).
 *LUDO:* refuse `drop_field` on FK-protected columns.
 
 ### 5. Tool protocol — register domain tools
 `src/agentix/tools/base.py` (`Tool`, runtime-checkable protocol: `name`, `description`,
-`input_schema`, `output_schema`, `mutates_target`, `verifier`, `async call()`). The app
-implements it — no subclassing needed — and registers in the `ToolRegistry`. App exceptions
-may expose `to_error_details()` (dispatcher hook) to return structured error payloads.
+`input_schema`, `output_schema`, `mutates_target`, `verifier`, `async call()` —
+[`tools.md`](tools.md) §1). The app implements it — no subclassing needed — and registers
+in the `ToolRegistry`. App exceptions may expose `to_error_details()` (dispatcher hook) to
+return structured error payloads.
 *LUDO:* ~40 migration tools (extract/load/discover/pin/diagnose…).
 
 ### 6. ToolContext injection — opaque app handles
-`src/agentix/tools/base.py` (`ToolContext`). `source` / `target` are untyped handles the app
-fills with its own clients; the kernel never inspects them. Tools access via
-`ctx.require_source()` / `ctx.require_target()`.
+`src/agentix/tools/base.py` (`ToolContext` — [`tools.md`](tools.md) §1). `source` /
+`target` are untyped handles the app fills with its own clients; the kernel never inspects
+them. Tools access via `ctx.require_source()` / `ctx.require_target()`.
 *LUDO:* source/target Odoo RPC clients.
 
 ### 7. Sandbox allowlists + agent identity — startup extenders
@@ -48,31 +60,50 @@ fills with its own clients; the kernel never inspects them. Tools access via
 `run_command.py` (`register_allowed_binaries`) and `git_ops.py`
 (`register_agent_git_identity` — git branch namespace + commit author; the branch
 prefix also guards `git_revert`). Kernel defaults cover code-hosting, generic
-verifiers and a neutral `agentix-agent` identity; the app extends at startup.
+verifiers and a neutral `agentix-agent` identity; the app extends at startup
+(sandbox model: [`tools.md`](tools.md) §4).
 *LUDO:* adds `odoo.com` hosts, the `odoo-bin` binary, and the `ludo/port-spike-`
 branch identity.
 
 ### 8. Skills — `SkillCatalog(skills_root)`
-`src/agentix/skills/catalog.py`. The app points the catalog at its own skill-bundle
-directory (Agent Skills standard: `SKILL.md` + manifest + optional `tool.py`). Session
-start surfaces name+description cheaply; bodies load on demand (progressive disclosure).
+`src/agentix/skills/catalog.py` ([`skills.md`](skills.md) §3). The app points the catalog
+at its own skill-bundle directory (Agent Skills standard: `SKILL.md` + manifest + optional
+`tool.py`). Session start surfaces name+description cheaply; bodies load on demand
+(progressive disclosure).
 
-### 9. Middleware chain — append after the kernel order
-`KERNEL_MIDDLEWARE_ORDER` + the `Engine(middleware_order=…)` parameter. The kernel ships
-the ordered core chain (trajectory, cost, budget, caps, loop-detection, retry, dangling,
-safety); the app appends its own middleware after it.
-*LUDO:* `MemoryMaintain` (ingest→lint→promote at session end).
+### 9. Middleware chain — fill the named slots
+`src/agentix/core/middleware/base.py` (`MIDDLEWARE_ORDER`) +
+`Engine(middlewares=…)`, checked by `validate_order` ([`engine.md`](engine.md) §2–3).
+The order is a fixed tuple of **named slots**; `validate_order` accepts only a
+**prefix** of it — no reordering, no free appends. The app's extension point is the
+**`MemoryMaintain` slot** (position 9, deliberately app-supplied — the kernel cannot
+know what a finding means in a domain). Adding any *new* layer means changing
+`MIDDLEWARE_ORDER` itself — a kernel change, by design.
+*LUDO:* `MemoryMaintain` (ingest→lint→reconcile→promote at session end,
+[`memory.md`](memory.md) §6).
 
 ### 10. Storage — use or subclass the three stores
-`agentix.storage` (`SqliteStore`, `MinioStore`, `MemoryStore`). Use as-is, or subclass to
+`agentix.storage` (`SqliteStore`, `MinioStore`, `MemoryStore` —
+[`memory.md`](memory.md) §3, [`session.md`](session.md) §2). Use as-is, or subclass to
 add app tables/keys — the kernel schema stays untouched.
 *LUDO:* `LudoSqliteStore` adds `diagnoses` + `applied_memory_rules` tables.
 
 ### 11. Events out — bus sink + neutral envelope
 `src/agentix/events.py`: the global `bus` and the neutral `SessionEvent` (6-field
-Contract-B envelope; types in `agentix.event_types`). The app registers a global sink to
-forward events to its own transport. The kernel knows no broker.
+envelope; types in `agentix.event_types`). The app registers a global sink to
+forward events to its own transport. The kernel knows no broker. This is the one
+seam that touches a wire contract: the envelope is pinned to Contract B
+([`contracts.md`](contracts.md) §2) by `test_event_contract_drift` — equality
+without import.
 *LUDO:* a NATS forwarder republishes every event to JetStream.
+
+### 12. Idempotency / resume-key provider — *(design seam — no code hook yet)*
+On redelivery the kernel restores only the agent's own state
+(`resume_or_create`, [`session.md`](session.md) §4); **what work is already done on
+the outside is the app's concern**. The app defines the idempotency mechanism that
+makes redelivered writes safe ([`isolation.md`](isolation.md) §6). A formal kernel
+protocol for the resume key is an open design item (session.md clause 4).
+*LUDO:* the deterministic record census — redelivered writes become no-op-or-update.
 
 ## What the kernel will never contain
 

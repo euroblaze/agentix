@@ -43,8 +43,9 @@ the first entry is the outermost layer.
 
 **The order is load-bearing** — `MIDDLEWARE_ORDER` is the single source of truth,
 `validate_order` enforces it at `Engine` construction, and a unit invariant tests
-it. Apps may compose a prefix of the kernel chain and extend it, but never
-reorder ([`seams.md`](seams.md)).
+it. Only a **prefix** of the named slots is accepted — no reordering, no free
+appends. The app's extension point is the named `MemoryMaintain` slot; adding a
+new layer means changing `MIDDLEWARE_ORDER` itself ([`seams.md`](seams.md) §9).
 
 ## 3. The nine layers, outside-in
 

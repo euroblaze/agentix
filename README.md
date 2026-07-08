@@ -240,7 +240,7 @@ Three stores, one invariant: **data and memory never cross.**
 
 ## How an app plugs in
 
-The kernel is extended only through its **11 seams** — never by editing kernel code.
+The kernel is extended only through its **12 seams** — never by editing kernel code.
 Canonical catalog with mechanisms and examples: [`docs/seams.md`](docs/seams.md).
 
 - **`KernelConfig` subclass** — attach the app's resolved settings.
@@ -251,7 +251,7 @@ Canonical catalog with mechanisms and examples: [`docs/seams.md`](docs/seams.md)
 - **`ToolContext` handles** — the app injects its own `source`/`target` clients; opaque to the kernel.
 - **Allowlist + identity extenders** — `register_allowed_hosts` (web fetch),
   `register_allowed_binaries` (shell), `register_agent_git_identity` (git branch namespace + author).
-- **Middleware** — compose the kernel chain (a prefix is fine) and extend it with app layers.
+- **Middleware** — compose a prefix of the fixed kernel order and fill the named `MemoryMaintain` slot; new layers need a kernel-order change.
 - **Skills** — drop bundles under the app's `skills_root`; the catalog discovers them.
 - **Storage** — use the three stores as-is or subclass to add app tables.
 - **Events out** — register a bus sink; the app owns the transport (the kernel knows no broker).
@@ -260,7 +260,7 @@ Canonical catalog with mechanisms and examples: [`docs/seams.md`](docs/seams.md)
 
 | Doc | Single source of truth for |
 |---|---|
-| [`docs/seams.md`](docs/seams.md) | • The 11 kernel↔app contact points<br>• what the kernel will never contain, and the gates enforcing it |
+| [`docs/seams.md`](docs/seams.md) | • The 12 kernel↔app contact points<br>• what the kernel will never contain, and the gates enforcing it |
 | [`docs/tools.md`](docs/tools.md) | • Tool contract, registry, kernel primitives<br>• safety gate<br>• the escalation ladder, the four verbs |
 | [`docs/skills.md`](docs/skills.md) | • Skill bundles, catalog<br>• progressive disclosure, loader |
 | [`docs/session.md`](docs/session.md) | • Session object, persistence<br>• checkpoints, resume, lease |
