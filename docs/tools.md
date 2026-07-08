@@ -159,7 +159,8 @@ How a capability gets invoked has **four** distinct primitives — not one:
 
 The earlier mental model ("surface skills → LLM consults → composes tools → results
 feed back") is only the **consult** verb. Sub-issues: capability levels [#500],
-selection [#501], delegate/A2A [#502]; consult↔compile [#499] is §10.
+selection [#501], delegate/A2A [#502] (canonical: [`a2a.md`](a2a.md)); consult↔compile
+[#499] is §10.
 
 ## 10. The consult↔compile lifecycle (#499)
 

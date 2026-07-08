@@ -105,6 +105,7 @@ Detail: `docs/memory.md` (working memory, page store, semantic recall, maintain 
 - an agent card as the INFO reply,
 - the *delegate* verb, and
 - activatable key-gated agents with a deterministic fallback when no key is present.
+- Detail: `docs/a2a.md` (agent card, capabilities, delegate crossing, deferred substrate).
 
 ### Evaluation.
 
