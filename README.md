@@ -103,15 +103,31 @@ turn = await engine.run_turn(session, Message(role="user", content="Summarise da
   routing direction): [`docs/routing.md`](docs/routing.md).
 - Detail: [`docs/engine.md`](docs/engine.md) (run_turn contract, middleware order, the nine layers).
 
-### Async execution model
+### Async and sync operation
 
-- The kernel is **async-only, and the app owns the event loop** — every surface is `async def`,
-  no `asyncio.run` inside the kernel; blocking work (SQLite, object store, file I/O,
-  subprocesses) is always pushed off the loop.
+**Async is the kernel's native mode.** Every kernel surface is `async def` and the app owns
+the event loop — the kernel never calls `asyncio.run` itself. Async means a call that waits
+(on a model, the database, the network) suspends instead of blocking, so one process can
+keep many sessions moving at once: while one session waits on an LLM response, another
+dispatches tools, a third saves a checkpoint. Anything genuinely blocking (SQLite, object
+store, file I/O, subprocesses) is always pushed off the loop onto worker threads.
+
+```python
+turn = await engine.run_turn(session, user_message=msg)   # suspends while waiting, never blocks
+```
+
+**Sync operation is coming soon** (`agentix.sync`, tracked in #70). Sync means calling the
+kernel like a normal function — the call blocks until the turn is done and returns the
+result. This serves codebases that cannot `await`: classic scripts, and industrial/OT
+toolchains that are typically synchronous. It will be a thin facade over the same async
+kernel (one hidden event loop inside), not a second implementation — one session at a time,
+same behaviour, same guarantees.
+
+- Time-sensitive (OT) workloads get determinism on the async core — turn deadlines,
+  cooperative cancellation, local SLM inference — never a kernel fork: the plan is
+  [`docs/sync.md`](docs/sync.md).
 - Call-graph from an agentic app into the kernel:
   [`docs/assets/async-call-graph.svg`](docs/assets/async-call-graph.svg).
-- Sync call-sites and OT (industrial, time-sensitive) workloads are served *on* the async
-  core — a facade plus determinism facilities, not a kernel fork: [`docs/sync.md`](docs/sync.md).
 - Detail: [`docs/async.md`](docs/async.md) (substrate, offload discipline, loop/task-scoped
   state, app facilities).
 

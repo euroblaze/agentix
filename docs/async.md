@@ -208,6 +208,7 @@ The landed toolkit for exploiting the async kernel — each with its canonical d
   between tool iterations (never mid-tool); generalizes the reference app's
   cancel registry. Becomes a numbered seam in [`seams.md`](seams.md) when it
   lands.
-- **Sync facade** (#70) — `agentix.sync`: one dedicated background loop thread,
-  blocking wrappers via `run_coroutine_threadsafe`. The supported path for sync
-  call-sites; design in [`sync.md`](sync.md).
+- **Sync facade** (#70, coming soon — documented, not yet scheduled) —
+  `agentix.sync`: one dedicated background loop thread, blocking wrappers via
+  `run_coroutine_threadsafe`. The supported path for sync call-sites; design in
+  [`sync.md`](sync.md).

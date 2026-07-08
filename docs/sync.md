@@ -68,9 +68,11 @@ The questions to settle before committing an OT profile, worked here first:
 | Spend certainty | money budget, warn→compress→abort ([`budgets.md`](budgets.md) §4) | landed |
 | Low-latency inference | local SLM provider adapter + routing policy (§2) | consider |
 
-## 4. The sync facade (`agentix.sync`) — #70
+## 4. The sync facade (`agentix.sync`) — #70, coming soon
 
-For integrators whose codebase is synchronous (typical in OT toolchains):
+**Status: planned, not scheduled for implementation yet** — documented here so
+integrators know it is coming. For integrators whose codebase is synchronous
+(typical in OT toolchains):
 
 - One module owning a **single dedicated background event-loop thread** — not
   per-call `asyncio.run` — so per-loop limiter state and `ContextVar` binding
