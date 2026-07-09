@@ -94,7 +94,7 @@ Tests: `tests/unit/storage/test_memory.py`.
 question, which known patterns are semantically closest (catching paraphrases
 that token-overlap misses).
 
-- `EmbeddingProvider` protocol; shipped providers: OpenAI
+- `EmbeddingDriver` protocol ([`drivers.md`](drivers.md) §3); shipped backends: OpenAI
   (`text-embedding-3-small`) and Huble. Pluggable — vendor neutrality survives.
 - `CosineIndex` — pure-Python in-memory cosine similarity; fine to ~10K entries,
   swap to FAISS behind the same interface past that.
