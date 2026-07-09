@@ -116,7 +116,9 @@ Tests: `tests/unit/drivers/test_embedding.py`.
   artifacts write account-scoped object-store keys.
 - The three-store boundary is doctrine (`storage/README.md`): bulk blobs → object
   store, operational state → SQLite, conclusions → memory markdown. **Never
-  cross them.**
+  cross them.** The physical medium under a store is becoming pluggable via
+  storage-type drivers ([`drivers.md`](drivers.md) §5) — the doctrine and the
+  tiers are untouched by that split.
 
 ## 6. The maintain seam — where the app plugs in
 

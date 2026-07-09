@@ -54,7 +54,7 @@ immediately after the upstream returns.
 - **Recorded spend = chat spend (v0.5).** Non-token-priced driver types (stt
   per-second, embedding per-text) are NOT written to the ledger — faking per-token
   numbers would corrupt enforcement; they emit a `driver.usage` log line instead
-  ([`drivers.md`](drivers.md) §6). The type-agnostic recorder keyed on
+  ([`drivers.md`](drivers.md) §7). The type-agnostic recorder keyed on
   `DriverDescriptor.pricing_ref` with unit normalization is DIRECTION (§5).
 - **Why not at the turn boundary:** when an inner tool call raises, the unwound chain
   skips any turn-level recording — yet the LLM call was already billed upstream. A

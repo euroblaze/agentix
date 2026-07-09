@@ -114,6 +114,12 @@ def _build_hf_stt(spec: DriverSpec, cfg: KernelConfig) -> Driver:
     return HfSttDriver(api_key=_env_key(spec), **kwargs)  # type: ignore[arg-type]
 
 
+def _build_minio_object_store(spec: DriverSpec, cfg: KernelConfig) -> Driver:
+    from agentix.drivers.adapters.minio import MinioObjectStoreDriver
+
+    return MinioObjectStoreDriver(spec=spec, api_key=_env_key(spec))
+
+
 def _build_huble_embedding(spec: DriverSpec, cfg: KernelConfig) -> Driver:
     from agentix.drivers.embedding import HubleEmbeddingDriver
 
@@ -133,6 +139,7 @@ for _key, _factory in (
     ("openai-embedding", _build_openai_embedding),
     ("huble-embedding", _build_huble_embedding),
     ("hf-stt", _build_hf_stt),
+    ("minio-object-store", _build_minio_object_store),
 ):
     register_driver_factory(_key, _factory)
 

@@ -23,6 +23,7 @@ from agentix.drivers.base import Driver, DriverDescriptor
 if TYPE_CHECKING:
     from agentix.drivers.chat import ChatDriver
     from agentix.drivers.embedding import EmbeddingDriver
+    from agentix.drivers.object_store import ObjectStoreDriver
     from agentix.drivers.speech import SttDriver
 
 log = structlog.get_logger(__name__)
@@ -103,6 +104,20 @@ class DriverRegistry:
         if not hasattr(driver, "transcribe"):
             raise TypeError(f"driver {driver.descriptor.name!r} is not an SttDriver")
         return cast("SttDriver", driver)
+
+    def object_store(self, name: str | None = None) -> ObjectStoreDriver:
+        """The default (or named) object-store driver; raises when absent."""
+        driver = self._default_for("storage", "object", name)
+        if not hasattr(driver, "put_bytes"):
+            raise TypeError(f"driver {driver.descriptor.name!r} is not an ObjectStoreDriver")
+        return cast("ObjectStoreDriver", driver)
+
+    def object_store_or_none(self, name: str | None = None) -> ObjectStoreDriver | None:
+        """Like :meth:`object_store` but None when no backend is declared."""
+        try:
+            return self.object_store(name)
+        except KeyError:
+            return None
 
     def embedding_or_none(self, name: str | None = None) -> EmbeddingDriver | None:
         """Like :meth:`embedding` but None when no backend is configured —

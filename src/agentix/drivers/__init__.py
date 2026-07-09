@@ -37,6 +37,7 @@ from agentix.drivers.limiter import (
     current_limit,
     driver_capacity,
 )
+from agentix.drivers.object_store import ObjectNotFound, ObjectStoreDriver
 from agentix.drivers.registry import DriverConflict, DriverRegistry
 from agentix.drivers.router import (
     ChatFailoverChain,
@@ -76,6 +77,8 @@ __all__ = [
     "FailoverCallback",
     "HubleEmbeddingDriver",
     "NoDriversAvailable",
+    "ObjectNotFound",
+    "ObjectStoreDriver",
     "OpenAIEmbeddingDriver",
     "SttDriver",
     "ToolSpec",

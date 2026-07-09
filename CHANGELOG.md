@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.1 — say "type"; storage drivers phase 1 (object store)
+
+- **Breaking rename:** driver `kind` → `type` everywhere — `DriverDescriptor.type`,
+  `DriverSpec.type`, `DriverRegistry.by_type()` / `types()` (ex `by_kind`/`kinds`).
+- **Storage driver family** (`type="storage"`): `ObjectStoreDriver` protocol +
+  `ObjectNotFound` (`agentix.drivers.object_store`), `MinioObjectStoreDriver`
+  adapter (`drivers/adapters/minio.py`, factory key `minio-object-store`), registry
+  accessors `object_store()` / `object_store_or_none()`. `MinioStore` is now the
+  semantic layer over an injected driver; `MinioStore(config)` unchanged for
+  consumers. S3 errors now classify into the driver taxonomy. Docs:
+  `docs/drivers.md` section 5. Phases 2–3 (relational, file) follow.
+
 ## 0.5.0 — Drivers: first-class external-system I/O
 
 The LLM/embeddings layer is re-founded as `agentix.drivers` — one abstraction for

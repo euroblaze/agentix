@@ -80,7 +80,7 @@ process; I7 = safe across processes.** Baseline: the production worker still run
   default 8, `configure_driver_capacity` at startup) acquired around every model
   call (chat `complete`, stt `transcribe`); closes agentix#40. *The deliberate
   carve-out: session state is per-task, but shared external capacity is
-  intentionally global.* Per-type limits: [`drivers.md`](drivers.md) §8.
+  intentionally global.* Per-type limits: [`drivers.md`](drivers.md) §9.
 - **I6 — Structured concurrency: no session-child task outlives its Session.**
   Intra-session fan-out is awaited under the session root; no orphan `create_task`
   touching a finalized session — this is what "one task-tree" encodes, and it
