@@ -1,10 +1,11 @@
 """Retry middleware — bounded exponential backoff over provider failures.
 
 Wraps the LLM call with a jittered retry loop. Retries *only* on provider
-errors the router already classified as retryable
-(``LlmRateLimit`` / ``LlmUnavailable``); ``LlmInvalidRequest`` bails out
-immediately. Tool failures are *not* retried here — tools own their own
-retry configs.
+errors the adapter already classified as retryable
+(``DriverRateLimited`` / ``DriverUnavailable``); ``DriverInvalidRequest``
+bails out immediately. Tool failures are *not* retried here — tools own
+their own retry loops, typically over the midlayer's
+:class:`agentix.tools.resilience.TransientRetry` strike ledger.
 """
 
 from __future__ import annotations

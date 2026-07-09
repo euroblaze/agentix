@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.5 — the driver midlayer (tools primitives + resilience) — #79
+
+- `agentix.tools.primitives` (pure, stdlib-only): `chunk`/`batched` (lazy
+  variant yields lists), `fingerprint_dict` (sha256 of the sort_keys/default=str
+  JSON dump — serialization params are the contract), `extract_json_object`
+  (tolerant JSON-from-LLM: fence-strip + first balanced object; the former
+  adversarial `_parse_verdict`, now shared), `aggregate_by_key` (count-desc,
+  first-seen ties).
+- `agentix.tools.resilience` (async, kernel-silent): `TransientRetry` strike
+  ledger (strikes persist across calls; `reset()` on domain progress; distinct
+  from the provider-call Retry middleware — docstrings cross-reference),
+  `halve_on_timeout` + `HalvingExhausted`, `bisect_on_failure` recursion
+  skeleton with the `on_failure` escape hatch. Policy is caller-supplied
+  callbacks; the kernel never calls up and never logs from these helpers.
+- `drivers/adapters/adversarial.py` re-points to `extract_json_object`
+  (behavior identical; `_parse_verdict` deleted).
+- Docs: tools.md new §8 "Primitives — the driver midlayer" (old §8–§12 →
+  §9–§13); seams.md midlayer note (mechanism/policy line as callback params).
+- Not extracted (recorded): the app AST spike tools stay app-side
+  (tools/spike boundary statement; no second consumer — revisit when one
+  appears); transient-marker policy, no-progress gates, per-item failure-index
+  parsing, quarantine vocabulary, cache key schemes.
+
+
 ## 0.5.4 — terminology: safety_events.type, append_to_log(type=)
 
 - Schema v15: `safety_events.kind` column renamed to `type` (SQLite RENAME

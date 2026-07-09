@@ -118,6 +118,15 @@ makes redelivered writes safe ([`isolation.md`](isolation.md) §6). A formal ker
 protocol for the resume key is an open design item (session.md clause 4).
 *LUDO:* the deterministic record census — redelivered writes become no-op-or-update.
 
+## The midlayer note (not a 14th seam)
+
+The driver-midlayer primitives ([`tools.md`](tools.md) §8) are not a new seam —
+they are the mechanism/policy line expressed as function parameters: the kernel
+owns the recovery/parsing mechanism, the app passes its policy in as callbacks
+(`is_transient`, `is_timeout`, `on_failure`, ...). The kernel never calls up into
+named app modules and never logs from these helpers; observability stays with the
+caller.
+
 ## What the kernel will never contain
 
 - **Domain vocabulary** — no app terms in identifiers or string literals.

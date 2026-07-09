@@ -125,11 +125,56 @@ The agent dispatcher (`core/agent_dispatcher.py`) owns the loop:
 - `elapsed_ms` (`tools/base.py`) is the single home for latency measurement;
   `ensure_input` for input coercion boilerplate.
 
+## 8. Primitives — the driver midlayer (#79)
+
+App tools are the vendor drivers of the four-layer tool-calling model (#74): the
+kernel owns the trap (dispatch), the table (registry), the monitor (safety gate) —
+and this section's **midlayer**: the shared failure-recovery and parsing mechanisms
+every bulk remote-call tool needs, written once so vendor drivers stop
+reimplementing them. Two modules, one rule: **the kernel takes callbacks; it never
+calls up into named app modules and never logs** — every policy decision (what
+counts as transient, what a result means, what to log) is caller-supplied.
+
+`tools/primitives.py` — pure, stdlib-only (safe to import from anywhere, including
+`drivers/`):
+
+| Primitive | Contract |
+|---|---|
+| `chunk(seq, n)` / `batched(seq, n)` | eager / lazy consecutive sublists; `batched` yields **lists** (not `itertools.batched` tuples) |
+| `fingerprint_dict(payload, length=24)` | sha256 of the `sort_keys=True, default=str` JSON dump — the serialization params are the contract; content-addressed caches depend on byte stability |
+| `extract_json_object(content)` | tolerant JSON-from-LLM: strip fences, first balanced `{...}`, dict or None; backs the adversarial verdict parser and any app response parser — callers validate their own keys |
+| `aggregate_by_key(items, key)` | `(key, count, first_item)` triples, count-descending, first-seen tie order |
+
+`tools/resilience.py` — async failure recovery:
+
+- **`TransientRetry`** — a strike *ledger*, not a wrapper: the app owns the loop,
+  the sleep and the logging; the ledger owns strike counting + backoff
+  (`min(base × strikes, cap)`, computed after the increment). Strikes persist
+  across calls and clear only on `reset()` — domain progress is the app's call.
+  Distinct from the Retry middleware (`core/middleware/retry.py`), which
+  transparently retries kernel **provider** calls flagged retryable by the driver
+  error taxonomy; `TransientRetry` serves tool-owned remote-call loops the
+  middleware never sees.
+- **`halve_on_timeout(items, attempt, is_timeout, merge, on_halve)`** — recursive
+  batch halving on timeout; non-timeout exceptions propagate unchanged; still
+  timing out at size 1 raises `HalvingExhausted(attempts)`; `on_halve` fires
+  before recursing (caller warning-ordering relies on it).
+- **`bisect_on_failure(items, attempt, is_success, merge, on_singleton_failure,
+  on_failure, on_split)`** — binary-search a failing batch down to the items that
+  actually fail. The skeleton only: the `on_failure` escape hatch lets a caller
+  that can extract per-item failure indices from its result handle them directly
+  (returning an outcome short-circuits the blind split; `None` falls through; a
+  raise propagates — that is also how "bisection disabled → hard fail" maps).
+
+The seam discipline mirrors `seams.md`: callback parameters are the
+mechanism/policy line. What stays app-side, always: transient-marker or error-
+taxonomy policy, result interpretation, quarantine vocabulary, and log events.
+
 ---
 
 *Everything below is DIRECTION — converged design, not the code today.*
 
-## 8. Tool vs Skill vs MCP — the three concepts
+## 9. Tool vs Skill vs MCP — the three concepts
 
 Grounded in Anthropic's published guidance
 ([writing tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents),
@@ -144,9 +189,9 @@ Grounded in Anthropic's published guidance
   [`skills.md`](skills.md).
 - **MCP** = the **transport** that exposes tools (and skills) across process /
   component boundaries. *The shared toolbox other workshops can borrow from.* This
-  is what "a Tools-catalog visible to all components" actually is (§11).
+  is what "a Tools-catalog visible to all components" actually is (§12).
 
-## 9. The four calling verbs (#503)
+## 10. The four calling verbs (#503)
 
 How a capability gets invoked has **four** distinct primitives — not one:
 
@@ -160,9 +205,9 @@ How a capability gets invoked has **four** distinct primitives — not one:
 The earlier mental model ("surface skills → LLM consults → composes tools → results
 feed back") is only the **consult** verb. Sub-issues: capability levels [#500],
 selection [#501], delegate/A2A [#502] (canonical: [`a2a.md`](a2a.md)); consult↔compile
-[#499] is §10.
+[#499] is §11.
 
-## 10. The consult↔compile lifecycle (#499)
+## 11. The consult↔compile lifecycle (#499)
 
 The reference app already has the two end-tiers — they were just never named as one
 lifecycle. An escalation falls through a **cost-ordered cascade**:
@@ -245,7 +290,7 @@ code paths — one lever seen from two sides.
 2. **The compiler link** — declarative remediation block on skills → router recipe;
    trace-invariance scoring → compile-candidate flag at session close.
 
-## 11. The cluster tools-catalog (MCP) — kernel-phase
+## 12. The cluster tools-catalog (MCP) — kernel-phase
 
 **Only one component is agentic.** In the reference cluster, tools and skills are a
 `ludo-agent` concern; every other component (gateway, webapps, CLI, desktop) is a
@@ -268,7 +313,7 @@ families. Detail lives with the app (`ludo-agent`).
 
 ---
 
-## 12. Q&A for agent-engineers
+## 13. Q&A for agent-engineers
 
 **Q: Wouldn't every agent-engineer need to develop their own set of tools?**
 
@@ -289,14 +334,14 @@ already a tool-authoring toolkit: `write_file`, `apply_patch`, `run_command`,
 write code, test it, and commit it today; nothing technically stops that output from
 being a new tool module. The gap is not capability but *trust*: who reviews the
 generated tool, when it gets registered, and what happens when it is wrong. The safe
-progression is config-before-code — the compile verb (§9) already has agents turning
+progression is config-before-code — the compile verb (§10) already has agents turning
 know-how into deterministic *recipes* (data, reviewable at a glance) before anyone
 lets them write *code*.
 
 **Q: Would the model (Cortex) ever write tools and update/publish the catalog for
 future reuse — and which parts of Agentix would be responsible?**
 
-As direction, yes — it is the consult↔compile lifecycle (§10) extended one tier,
+As direction, yes — it is the consult↔compile lifecycle (§11) extended one tier,
 with a human gate at the register step. The responsibilities map onto code that
 already exists:
 
@@ -306,9 +351,9 @@ already exists:
 | Writing and testing the tool safely | `tools/builtin.py` module-mode set + `tools/_sandbox.py` boundaries |
 | Admitting untrusted tools without risking the service | `tools/registry.py` — `try_register` (log + skip on failure, can never shadow a builtin); the skills loader already registers dynamically loaded tools this way |
 | Containing a bad mutating tool | `tools/safety.py` — a generated mutating tool must ship a verifier or it cannot register; verify-then-rollback limits blast radius |
-| Deciding *when* to author | trace-invariance scoring — the compile-readiness trigger (§10) |
+| Deciding *when* to author | trace-invariance scoring — the compile-readiness trigger (§11) |
 | Proving the tool works before promotion | the eval Verdict spine — outcomes graded by verification, not the agent's own claim |
-| Publishing for reuse across agents | the MCP tools-catalog surface (§11) |
+| Publishing for reuse across agents | the MCP tools-catalog surface (§12) |
 | Provenance | `git_*` tools — every generated artifact has a diff and an author trail |
 
 The missing piece is only the orchestration: an author-tool flow chaining
