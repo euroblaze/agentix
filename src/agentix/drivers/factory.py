@@ -182,7 +182,7 @@ def build_drivers(
     * embedding specs need ``sqlite`` (the cache store); a spec whose
       backend is unconfigured (``EmbeddingError``) is skipped — callers
       read ``registry.embedding_or_none()``.
-    * every other kind/modality builds strictly: unknown factory keys and
+    * every other type/modality builds strictly: unknown factory keys and
       constructor failures raise.
     """
     registry = DriverRegistry()
@@ -191,7 +191,7 @@ def build_drivers(
 
     chat_members: list[Driver] = []
     for spec in specs:
-        if spec.kind == "model" and spec.modality == "chat":
+        if spec.type == "model" and spec.modality == "chat":
             effective = spec
             if model_override and spec.driver in ("melious", "huble"):
                 effective = replace(spec, model=model_override)
@@ -202,7 +202,7 @@ def build_drivers(
 
                 driver = CostRecordingChatDriver(cast(ChatDriver, driver), sqlite=sqlite, pricing_table=pricing_table)
             chat_members.append(driver)
-        elif spec.kind == "model" and spec.modality == "embedding":
+        elif spec.type == "model" and spec.modality == "embedding":
             if sqlite is None:
                 continue  # embedding backends require the cache store
             try:

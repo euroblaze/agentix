@@ -21,20 +21,20 @@ expandability mechanism.
 
 ## 1. The core contract (`drivers/base.py`)
 
-- **`DriverDescriptor`** (frozen): `name` (unique in the registry), `kind` — an
+- **`DriverDescriptor`** (frozen): `name` (unique in the registry), `type` — an
   **open string vocabulary** (`"model"` today; `"database"`, `"queue"`, … later — no
   kernel enum to amend), `modality` (chat|embedding|vision|tts|stt|timeseries for
-  model-kind; None otherwise; validated: model-kind requires one), `source`
+  model-type; None otherwise; validated: model-type requires one), `source`
   (api|gateway|huggingface|local), `capabilities: frozenset[str]`, `default_model`,
   `pricing_ref` (key into the operator pricing table; **None = this driver's spend is
   not token-priced** — the machine-readable marker the cost story reads, §6).
 - **`Driver`** protocol (@runtime_checkable): `descriptor` property + `async aclose()`.
   **Deliberately verb-free** — identity and lifecycle only.
-- **Per-kind typed protocols** add the verbs — `ChatDriver.complete(ChatRequest) ->
+- **Per-type typed protocols** add the verbs — `ChatDriver.complete(ChatRequest) ->
   ChatResponse`, `EmbeddingDriver.embed(list[str]) -> list[EmbeddingResult]`,
   `SttDriver.transcribe(AudioSource) -> Transcript`. **Rejected alternative:** one
   generic `infer(Any) -> Any` — it erases the typing mypy enforces and forces
-  isinstance dances on every caller. Expandability lives in the open `kind`/protocol
+  isinstance dances on every caller. Expandability lives in the open `type`/protocol
   pattern instead (§7 worked example).
 - **Error taxonomy** — `DriverError(message, *, driver, retryable=False)`;
   `DriverRateLimited` / `DriverUnavailable` (retryable) vs `DriverInvalidRequest`
@@ -87,7 +87,7 @@ per-second — `pricing_ref=None`, see §6.
   registered wins unless `default=True` says otherwise. `aclose_all()` closes
   everything, logging instead of raising — shutdown must complete.
 - **`DriverSpec`** (`config.py`) — one declared instance: `name`, `driver` (builtin
-  factory key or dotted path `pkg.mod:Class`), `kind`, `modality`, `model`,
+  factory key or dotted path `pkg.mod:Class`), `type`, `modality`, `model`,
   `base_url`, `api_key_env` (**the env-var NAME, never a secret** — 12-factor),
   `default`, `options`. `KernelConfig.drivers: tuple[DriverSpec, ...]`; empty →
   `derive_driver_specs(cfg)` maps the legacy anthropic/huble/melious blocks (via
@@ -115,12 +115,12 @@ per-second — `pricing_ref=None`, see §6.
   [`budgets.md`](budgets.md)). Embedding and STT calls are NOT written to the session
   cost ledger — `ModelPricing` is strictly per-token and fake per-second numbers
   would corrupt budget enforcement. They emit a structured `driver.usage` log line
-  (kind, modality, driver, model, units, bound session id) so the spend stays
-  visible. The kind-agnostic recorder keyed on `pricing_ref` + unit normalization is
+  (type, modality, driver, model, units, bound session id) so the spend stays
+  visible. The type-agnostic recorder keyed on `pricing_ref` + unit normalization is
   DIRECTION (budgets.md).
 - **Capacity**: one process-global semaphore (`drivers/limiter.py`,
   `driver_capacity()`, default 8, per event loop — isolation.md I5) now covers chat
-  AND stt calls (embedding wrapping is DIRECTION with per-kind limits).
+  AND stt calls (embedding wrapping is DIRECTION with per-type limits).
 - **Session attribution**: `current_session_id` / `bind_session` / `session_scope`
   live in `drivers/session.py` — modality-agnostic; non-chat drivers read the
   ContextVar for log attribution.
@@ -133,17 +133,17 @@ dependency enters the app-free wheel):
 ```python
 class QueryResult:  ...                       # app-defined wire type
 
-class MySqlDriver:                            # kind="database" — no kernel change
+class MySqlDriver:                            # type="database" — no kernel change
     def __init__(self, *, spec: DriverSpec, api_key: str | None) -> None:
         self._pool = ...                      # dsn from spec.base_url, secret from api_key
         self.descriptor = DriverDescriptor(
-            name=spec.name, kind="database", source="local")
+            name=spec.name, type="database", source="local")
     async def query(self, sql: str, params: tuple = ()) -> QueryResult: ...
     async def aclose(self) -> None: ...       # close the pool
 ```
 
 Declared as `DriverSpec(name="mysql-main", driver="my_pkg.drivers:MySqlDriver",
-kind="database", modality="other", base_url="mysql://10.0.99.1:3306/app",
+type="database", modality="other", base_url="mysql://10.0.99.1:3306/app",
 api_key_env="MYSQL_PASSWORD")`. The registry, lifecycle, error taxonomy
 (`DriverError(retryable=...)` for deadlocks vs syntax errors) and config discipline
 all apply unchanged; only the verb protocol (`query`) is new — defined beside the
@@ -159,11 +159,11 @@ driver, not in the kernel.
   escalation tiers, health breakers: [`routing.md`](routing.md) §4/§6–7 (none of it
   landed in v0.5 — the registry default is a lookup, never a choice).
 - **Non-chat cost recording** — unit-pricing schema (per-second stt, per-text
-  embedding) + a kind-agnostic `CostRecordingDriver` keyed on `pricing_ref`
+  embedding) + a type-agnostic `CostRecordingDriver` keyed on `pricing_ref`
   ([`budgets.md`](budgets.md)).
-- **Per-kind / per-driver capacity limits** (today: one shared semaphore).
+- **Per-type / per-driver capacity limits** (today: one shared semaphore).
 - **Remaining modalities** — vision, tts, timeseries protocols + adapters (the stt
-  proof establishes the pattern); a kind-generic failover chain (don't generalize
+  proof establishes the pattern); a type-generic failover chain (don't generalize
   before a second consumer exists).
 - **Config collapse** — fold `anthropic:`/`huble:`/`melious:` into `drivers:` (v0.6).
 - **Lifecycle verbs** — `health()` / `warmup()` for local-runtime drivers.

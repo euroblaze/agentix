@@ -70,7 +70,7 @@ class EmbeddingResult:
 
 @runtime_checkable
 class EmbeddingDriver(Protocol):
-    """Protocol for embedding backends — the model-kind embedding verb.
+    """Protocol for embedding backends — the model-type embedding verb.
 
     Implementations must be safe to call from an async context. Vector
     length must be stable across calls of the same instance (otherwise
@@ -115,7 +115,7 @@ class OpenAIEmbeddingDriver:
     def descriptor(self) -> DriverDescriptor:
         return DriverDescriptor(
             name=self.name,
-            kind="model",
+            type="model",
             modality="embedding",
             source="api",
             default_model=self.model,
@@ -187,7 +187,7 @@ class HubleEmbeddingDriver:
     def descriptor(self) -> DriverDescriptor:
         return DriverDescriptor(
             name=self.name,
-            kind="model",
+            type="model",
             modality="embedding",
             source="gateway",
             default_model=self.model,
@@ -349,7 +349,7 @@ class CachedEmbeddingDriver:
             return inner_desc
         return DriverDescriptor(
             name=self._upstream.name,
-            kind="model",
+            type="model",
             modality="embedding",
             default_model=self.model,
         )
