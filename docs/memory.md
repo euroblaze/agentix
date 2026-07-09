@@ -5,7 +5,7 @@ labelled reference-app DIRECTION part
 
 **Single source of truth for memory in `docs/`.** Sections 1–6 document the landed
 kernel memory subsystem (code: `src/agentix/core/working_memory.py`,
-`storage/memory.py`, `embeddings.py`); sections 7–8 are **DIRECTION** — the memory
+`storage/memory.py`, `drivers/embedding.py`, `storage/vector_index.py`); sections 7–8 are **DIRECTION** — the memory
 doctrine an app builds on top. Two disambiguations up front: the model *window*
 (what enters a single LLM call) is [`context.md`](context.md) — memory is one of
 its retrieval sources, not the window itself. And **data vs memory never cross**:
@@ -90,7 +90,7 @@ Tests: `tests/unit/storage/test_memory.py`.
 
 ## 4. Semantic recall
 
-`embeddings.py`. Fuzzy recall over memory content — given a novel error or
+`drivers/embedding.py` + `storage/vector_index.py`. Fuzzy recall over memory content — given a novel error or
 question, which known patterns are semantically closest (catching paraphrases
 that token-overlap misses).
 
@@ -104,7 +104,7 @@ that token-overlap misses).
 - Activation is opt-in: with no provider configured, apps fall back to their
   deterministic matching.
 
-Tests: `tests/unit/test_embeddings.py`.
+Tests: `tests/unit/drivers/test_embedding.py`.
 
 ## 5. Session, config and storage plumbing
 
