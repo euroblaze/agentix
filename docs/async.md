@@ -130,7 +130,7 @@ each, with its SSoT:
   polled-`flock` async lock; concurrent maintain loops queue on the lock instead
   of corrupting a page.
 - [`budgets.md`](budgets.md) — cost recording sits at the awaited call boundary
-  (`CostRecordingProvider.complete`), reading the per-task `ContextVar` binding
+  (`CostRecordingChatDriver.complete`), reading the per-task `ContextVar` binding
   (§4), so every await records against the session that made it.
 - [`drivers.md`](drivers.md) — `ChatDriver.complete` is the one async method everything
   speaks; adapters await the provider SDKs directly, and the capacity semaphore
@@ -166,8 +166,8 @@ The landed toolkit for exploiting the async kernel — each with its canonical d
       await engine.run_turn(session)
   ```
 
-- **Capacity gate** — `configure_llm_capacity(limit)` at startup (default 8);
-  the dispatcher already wraps every provider call in `llm_capacity()`
+- **Capacity gate** — `configure_driver_capacity(limit)` at startup (default 8);
+  the dispatcher already wraps every model call in `driver_capacity()`
   ([`isolation.md`](isolation.md) I5).
 
 - **Lease (crash-safety heartbeat)** — `claim_session_lease(id, leased_by=…,

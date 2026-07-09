@@ -63,7 +63,7 @@ The questions to settle before committing an OT profile, worked here first:
 | Bounded latency per turn | turn deadline: `run_turn(..., deadline_seconds=…)` → clean abort → `paused` | #71 |
 | No runaway work | cooperative cancellation checked between tool iterations | #72 |
 | Crash detection / takeover | lease heartbeat + reaper ([`session.md`](session.md) §6) | landed |
-| Admission control | `configure_llm_capacity` gate ([`async.md`](async.md) §6) | landed |
+| Admission control | `configure_driver_capacity` gate ([`async.md`](async.md) §6) | landed |
 | Audit / replay | TrajectoryCapture — every turn mirrored to the store ([`engine.md`](engine.md) §3) | landed |
 | Spend certainty | money budget, warn→compress→abort ([`budgets.md`](budgets.md) §4) | landed |
 | Low-latency inference | local SLM provider adapter + routing policy (§2) | consider |
