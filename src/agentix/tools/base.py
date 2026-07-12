@@ -132,6 +132,12 @@ class Tool(Protocol):
     # ``class X(Tool)`` subclass style both the kernel and apps use — a bare
     # annotation makes mypy --strict reject every such class as abstract.
     required_provider: str | None = None
+    # Advertisement gate. ``False`` removes the tool from the per-turn LLM
+    # menu (dispatcher spec list, ``ToolRegistry.specs()``) WITHOUT removing
+    # it from the registry: internal resolution — verifier lookup, facade
+    # dispatch, compiled recipes, exact-name calls — keeps working. Apps use
+    # it to advertise a facade while keeping its sub-tools resident.
+    advertised: bool = True
 
     async def call(self, input: BaseModel, ctx: ToolContext) -> BaseModel: ...
 
