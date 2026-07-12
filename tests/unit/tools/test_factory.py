@@ -172,6 +172,27 @@ def test_default_timeout_declared_or_absent_semantics() -> None:
     assert (getattr(slow, "default_timeout_seconds", None) or chain_default) == 900.0
 
 
+def test_advertised_false_hides_from_specs_but_stays_resolvable() -> None:
+    """advertised=False removes a tool from the LLM menu (specs()), not from
+    the registry — verifiers, facades and exact-name calls keep resolving."""
+
+    @tool(description="Facade.")
+    async def facade(params: _In, ctx: ToolContext) -> _Out:
+        return _Out(y=0)
+
+    @tool(description="Sub-tool behind the facade.", advertised=False)
+    async def sub(params: _In, ctx: ToolContext) -> _Out:
+        return _Out(y=0)
+
+    assert facade.advertised is True  # the default
+    registry = ToolRegistry()
+    registry.register(cast(Tool, facade))
+    registry.register(cast(Tool, sub))
+    assert [s.name for s in registry.specs()] == ["facade"]  # menu: facade only
+    assert registry.get("sub") is sub  # resolution unchanged
+    assert [t.name for t in registry.all_tools()] == ["facade", "sub"]
+
+
 def test_closure_builder_pattern_binds_dependencies() -> None:
     """Dep-carrying tools close over their deps via a builder function."""
 

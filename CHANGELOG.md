@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.9 — tool advertisement gate (advertised=False)
+
+- `Tool.advertised` optional protocol member (default True), `@tool(advertised=...)`
+  kwarg, and filtering in BOTH menu surfaces: the dispatcher's per-turn spec
+  list and `ToolRegistry.specs()`. An unadvertised tool stays registered —
+  `get`/`all_tools`, verifier lookup, facade dispatch and exact-name execution
+  are unchanged; it just never enters the LLM menu. Mechanism only: WHICH
+  tools are hidden is app policy (first consumer: the migration app's
+  catalog collapse onto its pin_record/consult_memory facades, ludo#503 D1).
+
 ## 0.5.8 — @tool: default_timeout_seconds kwarg
 
 - `@tool(default_timeout_seconds=...)` / `FunctionTool` attribute — first-class

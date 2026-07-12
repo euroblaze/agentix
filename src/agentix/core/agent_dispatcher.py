@@ -124,7 +124,10 @@ class AgentDispatcher:
 
     async def __call__(self, turn: Turn) -> Turn:
         """Run the agent loop for a single engine turn."""
-        specs = [tool_to_spec(tool) for tool in self._registry.all_tools()]
+        # The per-turn menu carries only advertised tools; unadvertised ones
+        # stay resolvable below (facades dispatch to them, verifiers resolve,
+        # and an exact-name call still executes).
+        specs = [tool_to_spec(tool) for tool in self._registry.all_tools() if getattr(tool, "advertised", True)]
         ctx = self._ctx_factory(turn)
         iteration = 0
         final_assistant_content: str | None = None

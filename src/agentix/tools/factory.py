@@ -69,6 +69,7 @@ class FunctionTool:
         verifier: str | None = None,
         required_provider: str | None = None,
         default_timeout_seconds: float | None = None,
+        advertised: bool = True,
     ) -> None:
         # Same invariant the registry enforces, moved to declaration time —
         # a mutating tool without a verifier fails at import, not at startup.
@@ -87,6 +88,8 @@ class FunctionTool:
         # so None is equivalent to absent — long-running tools declare their
         # budget here instead of poking an attribute onto the instance.
         self.default_timeout_seconds = default_timeout_seconds
+        # False = registered but off the per-turn LLM menu (facade sub-tools).
+        self.advertised = advertised
         self.__doc__ = fn.__doc__
 
     def __repr__(self) -> str:
@@ -106,6 +109,7 @@ def tool(
     input_model: type[BaseModel] | None = None,
     output_model: type[BaseModel] | None = None,
     default_timeout_seconds: float | None = None,
+    advertised: bool = True,
 ) -> Callable[[ToolFn], FunctionTool]:
     """Build a :class:`FunctionTool` from ``async def fn(params, ctx) -> Output``.
 
@@ -149,6 +153,7 @@ def tool(
             verifier=verifier,
             required_provider=required_provider,
             default_timeout_seconds=default_timeout_seconds,
+            advertised=advertised,
         )
 
     return decorate

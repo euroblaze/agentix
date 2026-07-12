@@ -69,7 +69,11 @@ The protocol is satisfiable two ways; the registry, dispatcher, safety gate and
   `required_provider` is unmet, replacing ad-hoc `if provider:` conditionals in apps.
 
 `specs()` converts the catalog to `ToolSpec` JSON-schema advertisements — the
-provider-neutral form handed to LLM tool calling.
+provider-neutral form handed to LLM tool calling. Tools declaring
+`advertised = False` are excluded here and from the dispatcher's per-turn menu,
+but stay registered: verifier lookup, facade dispatch and exact-name execution
+keep resolving. Apps use this to advertise a facade while its sub-tools stay
+resident (smaller per-turn menu = lower context cost + less choice confusion).
 
 ## 3. Kernel primitives (`tools/builtin.py`)
 

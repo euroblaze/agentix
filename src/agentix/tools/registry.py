@@ -96,7 +96,12 @@ class ToolRegistry:
         return sorted(self._tools.values(), key=lambda t: t.name)
 
     def specs(self) -> list[ToolSpec]:
-        """Return JSON-schema advertisements suitable for LLM tool-calling."""
+        """Return JSON-schema advertisements suitable for LLM tool-calling.
+
+        Tools declaring ``advertised = False`` are excluded — they stay
+        registered (``get``/``all_tools`` unchanged) for verifier lookup,
+        facade dispatch and exact-name execution, but never enter the menu.
+        """
         return [
             ToolSpec(
                 name=t.name,
@@ -107,6 +112,7 @@ class ToolRegistry:
                 verifier=t.verifier,
             )
             for t in self.all_tools()
+            if getattr(t, "advertised", True)
         ]
 
     def __contains__(self, name: object) -> bool:
