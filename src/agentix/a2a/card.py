@@ -1,7 +1,7 @@
 """AgentCard — A2A v1.0 data model (discovery only, no transport).
 
 Pure data + validation.  No transport, credentials or trust-zone wiring —
-those land in W1–W3 (epic euroblaze/ludo #492).
+those land in W1-W3 (epic euroblaze/ludo #492).
 """
 
 from __future__ import annotations

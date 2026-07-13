@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from agentix.a2a import AgentCapabilities, AgentCard, AgentSkill
 
-
 # ── AgentCard construction ────────────────────────────────────────────────────
 
 

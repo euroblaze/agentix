@@ -12,6 +12,10 @@ import structlog
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from agentix.a2a import agents_file as _agents_file_for
+from agentix.a2a import load_agents as _load_agents
+from agentix.a2a import save_agents as _save_agents
+
 log = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -91,9 +95,6 @@ def _save_config_raw(raw: dict[str, Any], cfg_path: Path) -> None:
 
     cfg_path.parent.mkdir(parents=True, exist_ok=True)
     cfg_path.write_text(yaml.dump(raw, default_flow_style=False, sort_keys=False))
-
-
-from agentix.a2a import agents_file as _agents_file_for, load_agents as _load_agents, save_agents as _save_agents
 
 
 def _agents_file(cfg_path: Path) -> Path:
