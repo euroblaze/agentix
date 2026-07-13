@@ -44,16 +44,14 @@ agentix = "agentix_cli.main:app"
 Repository = "https://github.com/euroblaze/agentix"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
 
-[tool.hatch.build.targets.wheel]
-# Kernel-only wheel. The generated wire packages (libs/python/ludo_shared,
-# libs/internal/ludo_internal) are cluster vendoring machinery — canonical here
-# (scripts/gen_shared.py), consumed by consumers VENDORING them, never via this
-# wheel. The kernel owns its own event vocabulary (agentix.event_types /
-# agentix.events), drift-guarded against contracts/session-event.schema.json.
-packages = ["src/agentix", "src/agentix_cli"]
+[tool.setuptools.packages.find]
+where = ["src"]
+# Kernel + CLI only. libs/ (ludo_shared/ludo_internal) are cluster vendoring
+# machinery — canonical here, consumed by consumers vendoring them, never in wheel.
+include = ["agentix*", "agentix_cli*"]
 
 [dependency-groups]
 dev = [
