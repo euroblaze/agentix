@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -80,22 +79,11 @@ def _save_config_raw(raw: dict[str, Any], cfg_path: Path) -> None:
     cfg_path.write_text(yaml.dump(raw, default_flow_style=False, sort_keys=False))
 
 
+from agentix.a2a import agents_file as _agents_file_for, load_agents as _load_agents, save_agents as _save_agents
+
+
 def _agents_file(cfg_path: Path) -> Path:
-    return cfg_path.parent / "agents.json"
-
-
-def _load_agents(agents_file: Path) -> list[dict[str, Any]]:
-    if not agents_file.exists():
-        return []
-    try:
-        return json.loads(agents_file.read_text())
-    except (json.JSONDecodeError, OSError):
-        return []
-
-
-def _save_agents(agents_file: Path, agents: list[dict[str, Any]]) -> None:
-    agents_file.parent.mkdir(parents=True, exist_ok=True)
-    agents_file.write_text(json.dumps(agents, indent=2))
+    return _agents_file_for(cfg_path)
 
 
 # ── Driver endpoints ──────────────────────────────────────────────────────────

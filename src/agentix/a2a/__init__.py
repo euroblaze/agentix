@@ -6,6 +6,7 @@ to describe itself, plus validation.  No transport, credentials or trust-zone
 isolation — security-sensitive substrate lands in W1–W3.
 """
 
+from agentix.a2a._agent_store import agents_file, load_agents, save_agents
 from agentix.a2a.card import AgentCapabilities, AgentCard, AgentSkill
 
-__all__ = ["AgentCard", "AgentSkill", "AgentCapabilities"]
+__all__ = ["AgentCard", "AgentSkill", "AgentCapabilities", "agents_file", "load_agents", "save_agents"]
