@@ -13,10 +13,10 @@ import threading
 from pathlib import Path
 
 import pytest
-from agentix.drivers.adapters.intrinsic.local_fs_object import LocalObjectStoreDriver
 
 from agentix.core.engine import Engine
 from agentix.core.types import Message, Turn
+from agentix.drivers.adapters.intrinsic.local_fs_object import LocalObjectStoreDriver
 from agentix.drivers.session import current_session_id
 from agentix.storage import MinioStore, SqliteStore
 from agentix.sync import KernelLoop, SyncDeadlineExceeded, SyncFacade, SyncFacadeBusy

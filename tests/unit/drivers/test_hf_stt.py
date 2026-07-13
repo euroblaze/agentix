@@ -8,7 +8,6 @@ from typing import Any
 
 import httpx
 import pytest
-from agentix.drivers.adapters.intrinsic.hf import HfSttDriver
 
 from agentix.drivers import (
     AudioSource,
@@ -19,6 +18,7 @@ from agentix.drivers import (
     SttDriver,
     Transcript,
 )
+from agentix.drivers.adapters.intrinsic.hf import HfSttDriver
 
 # ───────────────────── helpers ─────────────────────
 
