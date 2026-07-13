@@ -159,6 +159,7 @@ async def build_kernel(cfg: DaemonConfig) -> KernelState:
     def _ctx_factory(turn: Any) -> Any:
         from agentix.tools.base import ToolContext
 
+        # Retrieve the live session from the in-memory map
         session = state._active_sessions.get(turn.session_id)
         extras = state._session_extras.get(turn.session_id if turn else "", {})
         # Fallback embedding from registry when the hook didn't supply one.
