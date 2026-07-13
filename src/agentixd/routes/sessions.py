@@ -138,8 +138,13 @@ async def run_turn(session_id: str, body: RunTurnRequest, request: Request) -> d
 
     user_message = Message(role="user", content=body.message) if body.message else None
 
+    hook = getattr(kernel, "_pre_turn_hook", None)
     try:
-        turn = await kernel.engine.run_turn(session, user_message=user_message)
+        if hook is not None:
+            async with hook(kernel, session):
+                turn = await kernel.engine.run_turn(session, user_message=user_message)
+        else:
+            turn = await kernel.engine.run_turn(session, user_message=user_message)
     except Exception as exc:
         log.error("run_turn failed", session_id=session_id, error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc
