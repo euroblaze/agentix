@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
-
-from agentix.core.types import Message, ToolCall
 from agentix.drivers.adapters.anthropic import AnthropicChatDriver
 from agentix.drivers.adapters.groq import GroqChatDriver
 from agentix.drivers.adapters.openai import OpenAIChatDriver, _to_openai
+
+from agentix.core.types import Message, ToolCall
 from agentix.drivers.base import DriverInvalidRequest
 
 

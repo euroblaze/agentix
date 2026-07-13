@@ -6,6 +6,7 @@ app.state.kernel rather than re-constructing components per request.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -163,10 +164,8 @@ async def build_kernel(cfg: DaemonConfig) -> KernelState:
         # Fallback embedding from registry when the hook didn't supply one.
         embeddings = extras.get("embeddings")
         if embeddings is None:
-            try:
+            with contextlib.suppress(Exception):
                 embeddings = state.registry.embedding_or_none()
-            except Exception:
-                pass
         return ToolContext(
             session=session,
             sqlite=state.sqlite,

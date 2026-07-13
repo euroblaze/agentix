@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from agentix.skills.catalog import SkillBundle, SkillCatalog
+from agentix.skills.catalog import SkillCatalog
 
 
 def _skill_md(root: Path, name: str, *, frontmatter: str = "", body: str = "# body") -> None:

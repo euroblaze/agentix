@@ -8,7 +8,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from agentix.drivers.adapters.anthropic_auth import (
     ChainTokenSource,
     EnvTokenSource,
@@ -17,6 +16,7 @@ from agentix.drivers.adapters.anthropic_auth import (
     StaticTokenSource,
     resolve_token_source,
 )
+
 from agentix.drivers.base import DriverInvalidRequest
 
 # ────────────────────────── StaticTokenSource ──────────────────────────

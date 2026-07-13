@@ -9,13 +9,13 @@ daemon socket is found.
 from __future__ import annotations
 
 import asyncio
-import json
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
-from agentix.a2a import agents_file as _agents_file_for, load_agents, save_agents
+from agentix.a2a import agents_file as _agents_file_for
+from agentix.a2a import load_agents, save_agents
 from agentix_cli._config import load_config
 from agentix_cli._output import dry_run_header, error, make_table, ok, print_kv, print_table, would
 
