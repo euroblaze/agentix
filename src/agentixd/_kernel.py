@@ -6,6 +6,7 @@ app.state.kernel rather than re-constructing components per request.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -29,6 +30,12 @@ class KernelState:
     error: str | None = None  # startup error message (if not ready)
     _cfg: DaemonConfig | None = None
     _active_sessions: dict[str, Any] = field(default_factory=dict)  # id → Session (in-memory)
+    # Per-turn extras injected by the plugin's _pre_turn_hook before engine.run_turn().
+    # Keys are session IDs; values are dicts with source/target/dry_run/embeddings.
+    _session_extras: dict[str, Any] = field(default_factory=dict)
+    # Plugin-registered async context manager: async with _pre_turn_hook(kernel, session).
+    # None when no plugin registered (non-ludo sessions pass through unmodified).
+    _pre_turn_hook: Any = None
 
 
 async def build_kernel(cfg: DaemonConfig) -> KernelState:
@@ -154,12 +161,22 @@ async def build_kernel(cfg: DaemonConfig) -> KernelState:
 
         # Retrieve the live session from the in-memory map
         session = state._active_sessions.get(turn.session_id)
+        extras = state._session_extras.get(turn.session_id if turn else "", {})
+        # Fallback embedding from registry when the hook didn't supply one.
+        embeddings = extras.get("embeddings")
+        if embeddings is None:
+            with contextlib.suppress(Exception):
+                embeddings = state.registry.embedding_or_none()
         return ToolContext(
             session=session,
             sqlite=state.sqlite,
             minio=state.minio,
             memory=state.memory,
             skills_root=_skills_root,
+            source=extras.get("source"),
+            target=extras.get("target"),
+            dry_run=extras.get("dry_run", False),
+            embeddings=embeddings,
         )
 
     dispatcher = AgentDispatcher(
