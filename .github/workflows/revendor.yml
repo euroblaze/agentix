@@ -39,6 +39,9 @@ jobs:
         run: |
           git config --global user.name "agentix-revendor"
           git config --global user.email "bot@euroblaze.de"
+          # GH_TOKEN authenticates gh itself, not plain `git push` — install
+          # gh's credential helper so the consumer-repo pushes carry the PAT.
+          gh auth setup-git
           python scripts/revendor.py --pr --workspace "$RUNNER_TEMP/ws" --sha "$GITHUB_SHA"
       - name: Trigger cluster drift gate (ludo-tests #2)
         env:
