@@ -27,6 +27,7 @@ class EventType(StrEnum):
     TURN_COMPLETED = "turn_completed"
     SAFETY_EVENT = "safety_event"
     CHECKPOINT_REQUESTED = "checkpoint_requested"
+    VERIFY_STAGE = "verify_stage"
 
 
 EVENT_TYPES = frozenset(EventType)
@@ -52,6 +53,9 @@ TURN_COMPLETED = EventType.TURN_COMPLETED
 SAFETY_EVENT = EventType.SAFETY_EVENT
 CHECKPOINT_REQUESTED = EventType.CHECKPOINT_REQUESTED  # reserved (operator review milestone)
 
+# Per-rung verification progress (a Job's verify pipeline; one event per rung).
+VERIFY_STAGE = EventType.VERIFY_STAGE
+
 # Current Contract B envelope version (breaking rename of kind→type lands here).
 SCHEMA_VERSION = "2.0"
 
@@ -69,5 +73,6 @@ __all__ = [
     "SESSION_STARTED",
     "TURN_COMPLETED",
     "TURN_STARTED",
+    "VERIFY_STAGE",
     "EventType",
 ]
