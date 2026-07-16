@@ -100,6 +100,7 @@ class AgentDispatcher:
         dispatch_guards: list[DispatchGuard] | None = None,
         default_tool_timeout_seconds: float = 300.0,
         cancel_check: Callable[[], bool] | None = None,
+        parallel_reads: bool = True,
     ) -> None:
         self._driver = driver
         self._registry = registry
@@ -117,6 +118,10 @@ class AgentDispatcher:
         # Cooperative cancellation (seam 14): polled between tool iterations so
         # a running turn can be cleanly aborted without interrupting mid-tool I/O.
         self._cancel_check = cancel_check
+        # Parallel read dispatch (#95): concurrent tool calls when all tools in
+        # a consecutive run declare mutates_target=False. Set False to revert to
+        # fully-sequential dispatch (e.g. for read tools with hidden side effects).
+        self._parallel_reads = parallel_reads
         # The window owner: assembles the per-turn LLM messages (history +
         # working memory) in one place. Compression stays with the TokenBudget
         # middleware for now, so the dispatcher assembles with compress=False.
@@ -190,40 +195,8 @@ class AgentDispatcher:
             )
             turn.input_messages.append(assistant_turn)
 
-            for call in response.tool_calls:
-                result = await self._execute_tool_call(call, ctx, turn=turn)
-                turn.tool_call_results.append(result)
-                turn.input_messages.append(
-                    Message(
-                        role="tool",
-                        tool_call_id=call.id,
-                        content=_tool_result_to_content(result),
-                    )
-                )
-                # Failures auto-record; successes auto-record only when
-                # they overturn a prior failure in blocked_paths.
-                if not result.ok:
-                    self._auto_record_attempt(turn, call, result, ctx)
-                else:
-                    self._auto_record_recovery(turn, call, result, ctx)
-                # Per-iteration flush so a mid-turn kill leaves a trace.
-                await self._persist_iteration(turn, ctx, result)
-                # Empty-args hard cap: abort after escalated directives ignored.
-                details = result.error_details or {}
-                if details.get("empty_args") and self._empty_args_streak.get(call.name, 0) >= _EMPTY_ARGS_HARD_CAP:
-                    turn.abort(
-                        f"agent loop for session {turn.session_id!r} stopped: "
-                        f"tool {call.name!r} called with empty arguments "
-                        f"{_EMPTY_ARGS_HARD_CAP} times in a row this turn — "
-                        f"model is not responding to escalated directives"
-                    )
-                    log.warning(
-                        "agent_dispatcher.empty_args_hard_cap",
-                        session_id=turn.session_id,
-                        tool=call.name,
-                        streak=_EMPTY_ARGS_HARD_CAP,
-                    )
-                    return turn
+            if await self._dispatch_tool_calls(response.tool_calls, ctx, turn):
+                return turn
 
             # App-supplied termination: observe this iteration's results, then
             # let the policy decide whether the loop is "done" (e.g. every
@@ -352,6 +325,107 @@ class AgentDispatcher:
                 error=type(exc).__name__,
                 message=str(exc)[:300],
             )
+
+    async def _dispatch_tool_calls(
+        self,
+        calls: list[ToolCall],
+        ctx: ToolContext,
+        turn: Turn,
+    ) -> bool:
+        """Dispatch one model response's tool calls, parallelising read-only runs.
+
+        Consecutive calls whose tool declares ``mutates_target=False`` are executed
+        concurrently (``asyncio.TaskGroup``) when ``parallel_reads`` is True.
+        Mutating calls and unknown-tool calls run sequentially. Result order in the
+        transcript always matches the original ``calls`` order.
+
+        Returns ``True`` when the turn was aborted (caller should ``return turn``).
+        """
+        # Partition into consecutive read / write runs so the transcript order is
+        # preserved and writes never bypass in-progress reads from an earlier call.
+        runs: list[tuple[bool, list[ToolCall]]] = []
+        for call in calls:
+            try:
+                tool = self._registry.get(call.name)
+                is_read = self._parallel_reads and not getattr(tool, "mutates_target", True)
+            except KeyError:
+                is_read = False  # unknown tool: sequential so the error is immediate
+            if runs and runs[-1][0] == is_read:
+                runs[-1][1].append(call)
+            else:
+                runs.append((is_read, [call]))
+
+        for is_read, batch in runs:
+            if is_read and len(batch) > 1:
+                log.info(
+                    "agent_dispatcher.parallel_reads",
+                    session_id=turn.session_id,
+                    tools=[c.name for c in batch],
+                    count=len(batch),
+                )
+                results = await self._execute_parallel(batch, ctx, turn=turn)
+            else:
+                results = []
+                for call in batch:
+                    results.append(await self._execute_tool_call(call, ctx, turn=turn))
+
+            for call, result in zip(batch, results):
+                turn.tool_call_results.append(result)
+                turn.input_messages.append(
+                    Message(
+                        role="tool",
+                        tool_call_id=call.id,
+                        content=_tool_result_to_content(result),
+                    )
+                )
+                if not result.ok:
+                    self._auto_record_attempt(turn, call, result, ctx)
+                else:
+                    self._auto_record_recovery(turn, call, result, ctx)
+                await self._persist_iteration(turn, ctx, result)
+                # Empty-args hard cap: abort after escalated directives ignored.
+                details = result.error_details or {}
+                if details.get("empty_args") and self._empty_args_streak.get(call.name, 0) >= _EMPTY_ARGS_HARD_CAP:
+                    turn.abort(
+                        f"agent loop for session {turn.session_id!r} stopped: "
+                        f"tool {call.name!r} called with empty arguments "
+                        f"{_EMPTY_ARGS_HARD_CAP} times in a row this turn — "
+                        f"model is not responding to escalated directives"
+                    )
+                    log.warning(
+                        "agent_dispatcher.empty_args_hard_cap",
+                        session_id=turn.session_id,
+                        tool=call.name,
+                        streak=_EMPTY_ARGS_HARD_CAP,
+                    )
+                    return True
+
+        return False
+
+    async def _execute_parallel(
+        self,
+        calls: list[ToolCall],
+        ctx: ToolContext,
+        *,
+        turn: Turn,
+    ) -> list[ToolCallResult]:
+        """Execute a read-only batch concurrently, returning results in original order.
+
+        ``SafetyGateBlocked`` / ``SafetyVerifyFailed`` from any task propagates out
+        (TaskGroup cancels remaining tasks and re-raises). ``ctx._current_tool_name``
+        is set per-task on a shared context — progress-event tagging is best-effort
+        under concurrency; reads are non-mutating so no ordering hazard exists there.
+        """
+        results: list[ToolCallResult | None] = [None] * len(calls)
+
+        async def _run_one(idx: int, call: ToolCall) -> None:
+            results[idx] = await self._execute_tool_call(call, ctx, turn=turn)
+
+        async with asyncio.TaskGroup() as tg:
+            for idx, call in enumerate(calls):
+                tg.create_task(_run_one(idx, call))
+
+        return results  # type: ignore[return-value]
 
     async def _persist_iteration(self, turn: Turn, ctx: ToolContext, result: ToolCallResult) -> None:
         """Flush this dispatch to SQLite + checkpoint. Best-effort."""
