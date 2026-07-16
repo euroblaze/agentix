@@ -157,9 +157,7 @@ class AgentDispatcher:
             # iterations so a mid-turn cancel request takes effect promptly
             # without interrupting any in-flight tool I/O.
             if self._cancel_check is not None and self._cancel_check():
-                turn.abort(
-                    f"agent loop for session {turn.session_id!r} cancelled by app request"
-                )
+                turn.abort(f"agent loop for session {turn.session_id!r} cancelled by app request")
                 log.info(
                     "agent_dispatcher.cancelled",
                     session_id=turn.session_id,

@@ -82,9 +82,7 @@ class Engine:
                     async with asyncio.timeout(deadline_seconds):
                         result = await self._chain(turn)
                 except TimeoutError:
-                    turn.abort(
-                        f"turn deadline of {deadline_seconds:.0f}s exceeded for session {session.id!r}"
-                    )
+                    turn.abort(f"turn deadline of {deadline_seconds:.0f}s exceeded for session {session.id!r}")
                     log.warning(
                         "engine.turn_deadline_exceeded",
                         session_id=session.id,
