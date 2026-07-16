@@ -63,8 +63,28 @@ curl -LsSf https://raw.githubusercontent.com/Agentix-Kernel/agentix/main/scripts
 
 ```sh
 uv sync                    # kernel + dev tooling
+uv sync --extra cli        # + CLI (typer/rich) — puts `agentix` on PATH via console script
 uv sync --extra broker     # + nats-py, only when running against a message broker
 ```
+
+**PyPI-firewalled environments** — if `uv sync --extra cli` cannot reach PyPI, two
+workarounds are available:
+
+```sh
+# Option A — uv run (resolves from the lock file cache; no fresh network fetch):
+uv run --extra cli python -m agentix_cli version
+uv run --extra cli python -m agentix_cli driver list
+
+# Option B — direct module invocation once the CLI extras are available any other way
+# (system pip, pre-built venv, CI runner, …):
+PYTHONPATH=src python -m agentix_cli version
+PYTHONPATH=src python -m agentix_cli driver list
+```
+
+The kernel package itself (`agentix`) installs cleanly from the source tree via
+`uv sync`. Only the optional CLI extras (`typer`, `rich`, `python-frontmatter`)
+require PyPI access; the lock file (`uv.lock`) pins their exact hashes so `uv run`
+can pull from the local cache when wheels are already present.
 
 ## Quickstart
 
