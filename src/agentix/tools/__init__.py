@@ -23,6 +23,7 @@ from agentix.tools.primitives import (
     extract_json_object,
     fingerprint_dict,
 )
+from agentix.tools.record_attempt import RecordAttemptInput, RecordAttemptOutput, record_attempt
 from agentix.tools.registry import ToolConflict, ToolRegistry
 from agentix.tools.resilience import (
     HalvingExhausted,
@@ -49,5 +50,8 @@ __all__ = [
     "extract_json_object",
     "fingerprint_dict",
     "halve_on_timeout",
+    "record_attempt",
+    "RecordAttemptInput",
+    "RecordAttemptOutput",
     "tool",
 ]

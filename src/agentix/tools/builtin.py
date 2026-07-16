@@ -11,6 +11,7 @@ app's ``register_builtin_tools`` calls ``register_kernel_tools`` then adds its O
 
 from __future__ import annotations
 
+from agentix.tools.record_attempt import record_attempt
 from agentix.tools.registry import ToolRegistry
 from agentix.tools.spike.apply_patch import ApplyPatch
 from agentix.tools.spike.git_ops import GitCommit, GitDiff, GitRevert, GitStatus
@@ -27,13 +28,15 @@ def register_kernel_tools(registry: ToolRegistry) -> None:
     """Register the always-on, domain-neutral primitives.
 
     Read-only file/web access (``read_file``/``glob_files``/``grep_files``/``web_fetch``)
-    plus ``write_to_fs`` (MinIO-backed scratch). Safe in any sandbox.
+    plus ``write_to_fs`` (MinIO-backed scratch) and ``record_attempt`` (session
+    working-memory write surface). Safe in any sandbox.
     """
     registry.register(ReadFile())
     registry.register(GlobFiles())
     registry.register(GrepFiles())
     registry.register(WebFetch())
     registry.register(WriteToFs())
+    registry.register(record_attempt)
 
 
 def try_register_kernel_tools(registry: ToolRegistry) -> None:
@@ -43,8 +46,8 @@ def try_register_kernel_tools(registry: ToolRegistry) -> None:
     before calling plugin.register() — avoids ToolConflict without silencing
     genuine conflicts elsewhere.
     """
-    for tool in (ReadFile(), GlobFiles(), GrepFiles(), WebFetch(), WriteToFs()):
-        registry.try_register(tool)
+    for t in (ReadFile(), GlobFiles(), GrepFiles(), WebFetch(), WriteToFs(), record_attempt):
+        registry.try_register(t)
 
 
 def register_kernel_module_mode_tools(registry: ToolRegistry) -> None:
