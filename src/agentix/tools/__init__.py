@@ -35,6 +35,8 @@ from agentix.tools.resilience import (
 __all__ = [
     "FunctionTool",
     "HalvingExhausted",
+    "RecordAttemptInput",
+    "RecordAttemptOutput",
     "Tool",
     "ToolConflict",
     "ToolContext",
@@ -51,7 +53,5 @@ __all__ = [
     "fingerprint_dict",
     "halve_on_timeout",
     "record_attempt",
-    "RecordAttemptInput",
-    "RecordAttemptOutput",
     "tool",
 ]
