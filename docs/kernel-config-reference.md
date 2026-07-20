@@ -69,3 +69,27 @@ None` marks non-token-priced drivers.
 Cluster-wide secret policy (fail-fast in stag/prod, secret vs publishable) lives in
 [`ludo-agent/docs/cluster/env-and-secrets.md`](https://github.com/Ludo-Odoo-Migrations/ludo-agent/blob/main/docs/cluster/env-and-secrets.md);
 this page is the kernel-specific list.
+
+## `plugin_packages:` — app plugin registration
+
+**agentixd only** (not read by the kernel itself). Declared in `~/.agentix/config.yaml` (or the
+file named by `AGENTIXD_CONFIG`):
+
+```yaml
+plugin_packages:
+  - ludo
+```
+
+Each entry is a Python package name. At daemon boot, `build_kernel()` does:
+
+```python
+importlib.import_module(f"{pkg}.plugin").register(state, tool_registry)
+```
+
+The package must be installed in the same venv as `agentixd`. Order matters: first plugin's
+skill roots take priority in `SkillCatalog`.
+
+**Plugin contract:** the `{pkg}.plugin` module must expose `register(state, tool_registry)`.
+Optionally it may expose `skills_roots() -> list[str]`.
+
+Full plugin authoring guide: [`plugins.md`](plugins.md).
